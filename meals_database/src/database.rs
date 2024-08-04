@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{
 	cell::{Ref, RefCell, RefMut},
-	io::{BufReader, BufWriter},
+	io::{BufReader, BufWriter}, ops::Deref,
 };
 
 pub struct Database<T>
@@ -32,8 +32,9 @@ where
 	}
 
 	pub fn save(&self) {
+		let data = self.data.borrow();
 		let file = BufWriter::new(std::fs::File::create(&self.path).unwrap());
-		serde_json::to_writer(file, &self.data).unwrap();
+		serde_json::to_writer(file, data.deref()).unwrap();
 	}
 
 	pub fn load(&mut self) {

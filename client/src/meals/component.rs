@@ -46,6 +46,10 @@ pub enum MealsMessage {
 		id: Uuid,
 	},
 	Scrollable(ScrollableMenuMessage),
+	ToggleLeftovers {
+		date: NaiveDate,
+		time: Time,
+	},
 	ToggleOpenMeal {
 		date: NaiveDate,
 		id: Uuid,
@@ -135,6 +139,7 @@ impl Meals {
 					.push(MealStub {
 						date,
 						id: meal_id,
+						leftovers: false,
 						time: Time::default(),
 					});
 
@@ -171,6 +176,25 @@ impl Meals {
 					}
 					_ => Task::none(),
 				}
+			}
+			MealsMessage::ToggleLeftovers { date, time } => {
+				let mut meal_plan = self.meals_database.get_mut();
+
+				let meal_stub = meal_plan
+					.planned_meals
+					.get_mut(&date)
+					.unwrap()
+					.iter_mut()
+					.find(|meal_stub| meal_stub.time == time)
+					.unwrap();
+				
+				meal_stub.leftovers = !meal_stub.leftovers;
+
+				drop(meal_plan);
+
+				self.meals_database.save();
+
+				Task::none()
 			}
 			MealsMessage::ToggleOpenMeal { .. } => self.meals_list.update(event),
 			MealsMessage::ToggleOpenMealInChooser { .. } => self.meals_chooser.update(event),

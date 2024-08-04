@@ -1,7 +1,7 @@
 use chrono::{Datelike, NaiveDate};
 use iced::{
-	widget::{button, column, container, image, row, text},
-	Border, Color, Element, Length, Padding, Shadow, Task, Theme,
+	widget::{button, column, container, image, row, text, Space},
+	Alignment, Border, Color, Element, Length, Padding, Shadow, Task, Theme,
 };
 use meals_database::{Database, MealInfo, MealPlan, MealStub, Time};
 use std::{
@@ -13,6 +13,7 @@ use uuid::Uuid;
 use crate::{
 	scrollable_menu::ScrollableMenu,
 	styles::{danger_button, primary_button},
+	widgets::circle,
 	Message,
 };
 
@@ -74,18 +75,35 @@ impl MealsList {
 		&self,
 		meal_id_to_color: &mut HashMap<Uuid, Color>,
 		meal_info: &MealInfo,
-		stub: &MealStub,
+		meal_stub: &MealStub,
 	) -> Element<MealsMessage> {
-		let date = stub.date;
-		let time = stub.time;
+		let date = meal_stub.date;
+		let time = meal_stub.time;
 		let color = get_meal_color(meal_id_to_color, &meal_info.id);
 		if !self.opened_meals.contains(&(date, time)) {
 			return button(
 				row![
-					text!("{}/{}/{}", date.month(), date.day(), date.year())
-						.style(move |_theme| { text::Style { color: Some(color) } },),
+					row![
+						if meal_stub.leftovers {
+							let color = get_meal_color(meal_id_to_color, &meal_stub.id).clone();
+							container(
+								container(Space::new(3.0, 6.0)).style(move |_theme| color.into()),
+							)
+							.width(6)
+							.align_x(Alignment::Center)
+							.align_y(Alignment::Center)
+						} else {
+							container(circle(get_meal_color(meal_id_to_color, &meal_stub.id), 3.0))
+								.align_y(Alignment::Center)
+						},
+						text!("{}/{}/{}", date.month(), date.day(), date.year())
+							.style(move |_theme| { text::Style { color: Some(color) } },),
+					]
+					.align_y(Alignment::Center)
+					.spacing(5),
 					text!("{}", meal_info.name)
 				]
+				.align_y(Alignment::Center)
 				.spacing(10)
 				.width(Length::Fill),
 			)
@@ -104,7 +122,11 @@ impl MealsList {
 			.into();
 		}
 
-		let mut meal_contents = meal_contents(meal_info, self.images.get(&meal_info.image));
+		let mut meal_contents = meal_contents(
+			meal_info,
+			self.images.get(&meal_info.image),
+			Some(meal_stub),
+		);
 		meal_contents = meal_contents.push(
 			row![
 				button(text!("Delete"))

@@ -7,7 +7,7 @@ use iced::{
 	border::Radius,
 	color,
 	task::Handle,
-	widget::{column, container, scrollable, text, Button},
+	widget::{column, scrollable, Button},
 	Border, Color, Element, Length, Padding, Task, Theme,
 };
 

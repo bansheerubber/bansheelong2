@@ -1,6 +1,6 @@
 use chrono::{Datelike, Days, Local, Months, NaiveDate, Weekday};
 use iced::{
-	widget::{button, column, container, row, text},
+	widget::{button, column, container, row, text, Space},
 	Alignment, Border, Element, Length, Shadow, Task, Theme,
 };
 use meals_database::{Database, MealPlan};
@@ -99,10 +99,21 @@ impl Calendar {
 
 				if let Some(meals) = meals {
 					for meal_stub in meals.iter() {
-						bubbles = bubbles.push(circle(
-							get_meal_color(&mut meal_id_to_color, &meal_stub.id),
-							3.0,
-						));
+						bubbles = bubbles.push(if meal_stub.leftovers {
+							let color =
+								get_meal_color(&mut meal_id_to_color, &meal_stub.id).clone();
+
+							container(
+								container(Space::new(3.0, 6.0)).style(move |_theme| color.into()),
+							)
+							.width(6)
+							.align_x(Alignment::Center)
+						} else {
+							container(circle(
+								get_meal_color(&mut meal_id_to_color, &meal_stub.id),
+								3.0,
+							))
+						});
 					}
 				}
 

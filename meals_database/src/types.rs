@@ -66,6 +66,7 @@ impl MealInfo {
 		MealStub {
 			date,
 			id: self.id,
+			leftovers: false,
 			time,
 		}
 	}
@@ -93,6 +94,8 @@ impl Time {
 pub struct MealStub {
 	pub date: NaiveDate,
 	pub id: Uuid,
+	#[serde(default)]
+	pub leftovers: bool,
 	pub time: Time,
 }
 

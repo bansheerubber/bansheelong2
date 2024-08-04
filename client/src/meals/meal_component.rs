@@ -1,8 +1,9 @@
 use iced::{
-	widget::{column, container, image, row, text, Column},
+	border, color,
+	widget::{checkbox, column, container, image, row, text, Column, Space},
 	Element, Length, Theme,
 };
-use meals_database::{Ingredient, MealInfo, RecipeStep};
+use meals_database::{Ingredient, MealInfo, MealStub, RecipeStep};
 
 use super::MealsMessage;
 
@@ -37,6 +38,7 @@ fn view_recipe_step<'a, 'b: 'a>(
 pub fn meal_contents<'a, 'b: 'a>(
 	meal_info: &'a MealInfo,
 	image_handle: Option<&'a image::Handle>,
+	meal_stub: Option<&'a MealStub>,
 ) -> Column<'b, MealsMessage> {
 	let image = if let Some(handle) = image_handle {
 		container(image(handle.clone()))
@@ -67,10 +69,37 @@ pub fn meal_contents<'a, 'b: 'a>(
 		)
 		.spacing(5);
 
+	let checkbox: Element<MealsMessage> = if let Some(meal_stub) = meal_stub {
+		let date = meal_stub.date.clone();
+		let time = meal_stub.time.clone();
+		row![
+			text!("Leftovers:"),
+			checkbox("", meal_stub.leftovers)
+				.on_toggle(move |_toggled| MealsMessage::ToggleLeftovers { date, time })
+				.style(|_theme, status: checkbox::Status| checkbox::Style {
+					background: match status {
+						checkbox::Status::Active { is_checked: true }
+						| checkbox::Status::Hovered { is_checked: true } => {
+							color!(0x6A4A77).into()
+						}
+						_ => color!(0x2C1E31).into(),
+					},
+					icon_color: color!(0x1B121F),
+					border: border::color(color!(0x6A4A77)).width(2).rounded(2),
+					text_color: None,
+				})
+		]
+		.spacing(10)
+		.into()
+	} else {
+		Space::new(0, 0).into()
+	};
+
 	column![
 		image,
 		text(meal_info.name.clone()),
 		text!("Serves {}", meal_info.serving_size),
+		checkbox,
 		container(
 			container(text!(""))
 				.style(|theme: &Theme| theme.extended_palette().background.weak.color.into())

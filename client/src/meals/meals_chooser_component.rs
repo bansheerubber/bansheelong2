@@ -88,7 +88,7 @@ impl MealsChooser {
 			.into();
 		}
 
-		let mut meal_contents = meal_contents(meal_info, self.images.get(&meal_info.image));
+		let mut meal_contents = meal_contents(meal_info, self.images.get(&meal_info.image), None);
 		meal_contents = meal_contents.push(
 			row![
 				button(text!("Close"))

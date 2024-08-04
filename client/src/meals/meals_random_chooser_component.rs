@@ -69,7 +69,7 @@ impl RandomMealChooser {
 	}
 
 	fn view_meal(&self, meal_info: &MealInfo) -> Element<MealsMessage> {
-		let meal_contents = meal_contents(meal_info, self.images.get(&meal_info.image));
+		let meal_contents = meal_contents(meal_info, self.images.get(&meal_info.image), None);
 		container(meal_contents)
 			.width(Length::Fill)
 			.padding(10)
