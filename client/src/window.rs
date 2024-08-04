@@ -3,26 +3,39 @@ use iced::theme::Palette;
 use iced::widget::{container, row, text};
 use iced::{alignment, color, Element, Length, Subscription, Task, Theme};
 
+use crate::meals::{Meals, MealsMessage};
+use crate::todos::{Todos, TodosMessage};
+use crate::util::download_image;
 use crate::weather::{Weather, WeatherMessage};
 use crate::WINDOW_HEIGHT;
 
 pub struct Window {
+	meals: Meals,
+	todos: Todos,
 	weather: Weather,
 }
 
 #[derive(Clone, Debug)]
 pub enum Message {
+	FetchImage { url: String },
+	Meals(MealsMessage),
+	Noop,
 	RefetchWeather,
+	Todos(TodosMessage),
 	Weather(WeatherMessage),
 }
 
 impl Window {
 	pub fn new() -> (Self, Task<Message>) {
+		let (meals, task) = Meals::new();
+
 		(
 			Self {
+				meals,
+				todos: Todos::new(),
 				weather: Weather::new(),
 			},
-			Task::done(Message::RefetchWeather),
+			Task::batch([Task::done(Message::RefetchWeather), task]),
 		)
 	}
 
@@ -31,16 +44,32 @@ impl Window {
 	}
 
 	pub fn update(&mut self, message: Message) -> Task<Message> {
-		match message {
+		let message = match message {
+			Message::FetchImage { url } => {
+				return Task::perform(download_image(url.clone()), move |bytes| match bytes {
+					Some(bytes) => Message::Meals(MealsMessage::Image {
+						bytes,
+						url: url.clone(),
+					}),
+					None => Message::Meals(MealsMessage::FailedImage { url: url.clone() }),
+				})
+			}
+			Message::Meals(message) => return self.meals.update(message),
+			Message::Noop => None,
 			Message::RefetchWeather => {
 				return Task::perform(crate::weather::dial(), move |result| {
 					Message::Weather(WeatherMessage::ApiResult(result))
 				})
 			}
+			Message::Todos(message) => self.todos.update(message),
 			Message::Weather(message) => self.weather.update(message),
 		};
 
-		Task::none()
+		if let Some(message) = message {
+			Task::done(message)
+		} else {
+			Task::none()
+		}
 	}
 
 	pub fn view(&self) -> Element<Message> {
@@ -54,7 +83,18 @@ impl Window {
 			)
 			.height(Length::Fill)
 			.padding([0, 25])
-			.align_y(alignment::Vertical::Center)
+			.align_y(alignment::Vertical::Center),
+			// self.todos.view().map(Message::Todos),
+			self.meals.view().map(Message::Meals),
+			container(
+				container(text!(""))
+					.style(|theme: &Theme| theme.extended_palette().background.weak.color.into())
+					.width(2)
+					.height(WINDOW_HEIGHT - 50.0)
+			)
+			.height(Length::Fill)
+			.padding([0, 25])
+			.align_y(alignment::Vertical::Center),
 		])
 		.width(Length::Fill)
 		.height(WINDOW_HEIGHT)
@@ -75,7 +115,10 @@ impl Window {
 				background: Background {
 					strong: Pair::new(color!(0x322238), palette.text), // #322238
 					base: Pair::new(palette.background, palette.text),
-					weak: Pair::new(color!(0x583C63), palette.text), // #583C63
+					weak: Pair {
+						color: color!(0x583C63), // #583C63
+						text: color!(0xFFB3FF),  // #FFB3FF
+					},
 				},
 				primary: Primary {
 					strong: Pair::new(color!(0xFF66FF), palette.text), // #FF66FF

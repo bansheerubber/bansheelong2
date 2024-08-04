@@ -1,10 +1,19 @@
+#![feature(let_chains)]
+
 use anyhow::Result;
 use iced::{
 	font::{Family, Stretch, Style, Weight},
 	Font,
 };
 
+mod calendar;
+mod meals;
+mod scrollable_menu;
+mod styles;
+mod todos;
+mod util;
 mod weather;
+mod widgets;
 mod window;
 
 pub use window::Message;
