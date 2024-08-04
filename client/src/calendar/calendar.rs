@@ -104,7 +104,7 @@ impl Calendar {
 								get_meal_color(&mut meal_id_to_color, &meal_stub.id).clone();
 
 							container(
-								container(Space::new(3.0, 6.0)).style(move |_theme| color.into()),
+								container(Space::new(2.0, 6.0)).style(move |_theme| color.into()),
 							)
 							.width(6)
 							.align_x(Alignment::Center)
