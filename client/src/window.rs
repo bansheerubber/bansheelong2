@@ -1,9 +1,10 @@
 use iced::theme::palette::{Background, Danger, Extended, Pair, Primary, Secondary, Success};
 use iced::theme::Palette;
-use iced::widget::{container, row, text};
+use iced::widget::{container, row, text, Space};
 use iced::{alignment, color, Element, Length, Subscription, Task, Theme};
 
 use crate::meals::{Meals, MealsMessage};
+use crate::storage::{Storage, StorageMessage};
 use crate::todos::{Todos, TodosMessage};
 use crate::util::download_image;
 use crate::weather::{Weather, WeatherMessage};
@@ -11,6 +12,7 @@ use crate::WINDOW_HEIGHT;
 
 pub struct Window {
 	meals: Meals,
+	storage: Storage,
 	todos: Todos,
 	weather: Weather,
 }
@@ -21,6 +23,7 @@ pub enum Message {
 	Meals(MealsMessage),
 	Noop,
 	RefetchWeather,
+	Storage(StorageMessage),
 	Todos(TodosMessage),
 	Weather(WeatherMessage),
 }
@@ -28,10 +31,10 @@ pub enum Message {
 impl Window {
 	pub fn new() -> (Self, Task<Message>) {
 		let (meals, task) = Meals::new();
-
 		(
 			Self {
 				meals,
+				storage: Storage::new(),
 				todos: Todos::new(),
 				weather: Weather::new(),
 			},
@@ -61,6 +64,7 @@ impl Window {
 					Message::Weather(WeatherMessage::ApiResult(result))
 				})
 			}
+			Message::Storage(message) => return self.storage.update(message),
 			Message::Todos(message) => self.todos.update(message),
 			Message::Weather(message) => self.weather.update(message),
 		};
@@ -86,15 +90,8 @@ impl Window {
 			.align_y(alignment::Vertical::Center),
 			// self.todos.view().map(Message::Todos),
 			self.meals.view().map(Message::Meals),
-			container(
-				container(text!(""))
-					.style(|theme: &Theme| theme.extended_palette().background.weak.color.into())
-					.width(2)
-					.height(WINDOW_HEIGHT - 50.0)
-			)
-			.height(Length::Fill)
-			.padding([0, 25])
-			.align_y(alignment::Vertical::Center),
+			Space::with_width(20),
+			self.storage.view().map(Message::Storage),
 		])
 		.width(Length::Fill)
 		.height(WINDOW_HEIGHT)

@@ -33,7 +33,7 @@ impl MealsList {
 				images: HashMap::new(),
 				meals_database,
 				opened_meals: HashSet::new(),
-				width: 420,
+				width: 400,
 
 				menu,
 			},

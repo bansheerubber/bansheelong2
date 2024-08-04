@@ -186,9 +186,9 @@ impl Meals {
 				CalendarState::RandomChooser { .. } => self.random_meal_chooser.view(),
 			}
 		)
-		.spacing(740 - self.calendar.width() - self.meals_list.width())
+		.spacing(720 - self.calendar.width() - self.meals_list.width())
 		.align_y(Alignment::Center)
-		.width(740)
+		.width(720)
 		.into()
 	}
 }
