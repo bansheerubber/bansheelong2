@@ -1,14 +1,13 @@
 use chrono::{Datelike, Days, Local, Months, NaiveDate, Weekday};
 use iced::{
-	color,
 	widget::{button, column, container, row, text},
-	Alignment, Border, Color, Element, Length, Shadow, Task, Theme,
+	Alignment, Border, Element, Length, Shadow, Task, Theme,
 };
 use meals_database::{Database, MealPlan};
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
 use crate::{
-	meals::{CalendarState, MealsMessage},
+	meals::{get_meal_color, CalendarState, MealsMessage},
 	pt,
 	styles::invisible_button,
 	widgets::circle,
@@ -38,8 +37,6 @@ pub struct Calendar {
 	meals_database: Rc<Database<MealPlan>>,
 	start: NaiveDate,
 }
-
-const MEAL_COLORS: [Color; 3] = [color!(0xDBCD51), color!(0x58B7CE), color!(0xE059E0)];
 
 impl Calendar {
 	pub fn new(meals_database: Rc<Database<MealPlan>>) -> Self {
@@ -84,6 +81,8 @@ impl Calendar {
 			iter = iter.checked_sub_days(Days::new(1)).unwrap();
 		}
 
+		let mut meal_id_to_color = HashMap::new();
+
 		let meal_plan = self.meals_database.get();
 		let mut days = column(vec![]).spacing(DAY_SPACING);
 		while (iter.month() <= self.start.month() && iter.year() == self.start.year())
@@ -100,7 +99,10 @@ impl Calendar {
 
 				if let Some(meals) = meals {
 					for meal_stub in meals.iter() {
-						bubbles = bubbles.push(circle(MEAL_COLORS[meal_stub.time.as_usize()], 3.0));
+						bubbles = bubbles.push(circle(
+							get_meal_color(&mut meal_id_to_color, &meal_stub.id),
+							3.0,
+						));
 					}
 				}
 

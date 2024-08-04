@@ -1,13 +1,14 @@
 use chrono::{Datelike, NaiveDate};
 use iced::{
 	widget::{button, column, container, image, row, text},
-	Border, Element, Length, Padding, Shadow, Task, Theme,
+	Border, Color, Element, Length, Padding, Shadow, Task, Theme,
 };
 use meals_database::{Database, MealInfo, MealPlan, MealStub, Time};
 use std::{
 	collections::{HashMap, HashSet},
 	rc::Rc,
 };
+use uuid::Uuid;
 
 use crate::{
 	scrollable_menu::ScrollableMenu,
@@ -15,7 +16,7 @@ use crate::{
 	Message,
 };
 
-use super::{meal_contents, MealsMessage};
+use super::{get_meal_color, meal_contents, MealsMessage};
 
 pub struct MealsList {
 	images: HashMap<String, image::Handle>,
@@ -69,19 +70,20 @@ impl MealsList {
 		}
 	}
 
-	fn view_meal(&self, meal_info: &MealInfo, stub: &MealStub) -> Element<MealsMessage> {
+	fn view_meal(
+		&self,
+		meal_id_to_color: &mut HashMap<Uuid, Color>,
+		meal_info: &MealInfo,
+		stub: &MealStub,
+	) -> Element<MealsMessage> {
 		let date = stub.date;
 		let time = stub.time;
+		let color = get_meal_color(meal_id_to_color, &meal_info.id);
 		if !self.opened_meals.contains(&(date, time)) {
 			return button(
 				row![
-					text!("{}/{}/{}", date.month(), date.day(), date.year()).style(
-						|theme: &Theme| {
-							text::Style {
-								color: Some(theme.extended_palette().background.weak.text),
-							}
-						},
-					),
+					text!("{}/{}/{}", date.month(), date.day(), date.year())
+						.style(move |_theme| { text::Style { color: Some(color) } },),
 					text!("{}", meal_info.name)
 				]
 				.spacing(10)
@@ -134,12 +136,14 @@ impl MealsList {
 
 		let mut keys = meal_plan.planned_meals.keys().collect::<Vec<_>>();
 		keys.sort();
-		
+
+		let mut meal_id_to_color = HashMap::new();
 		for key in keys.iter() {
 			let meals = meal_plan.planned_meals.get(key).unwrap();
 			for meal_stub in meals.iter() {
 				let meal_info = meal_plan.all_meals.get(&meal_stub.id).unwrap();
-				meals_list = meals_list.push(self.view_meal(meal_info, meal_stub));
+				meals_list =
+					meals_list.push(self.view_meal(&mut meal_id_to_color, meal_info, meal_stub));
 			}
 		}
 
