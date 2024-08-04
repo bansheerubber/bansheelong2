@@ -5,6 +5,8 @@ use iced::{
 };
 use meals_database::{Ingredient, MealInfo, MealStub, RecipeStep};
 
+use crate::styles::checkbox_style;
+
 use super::MealsMessage;
 
 fn view_ingredient<'a, 'b: 'a>(
@@ -76,18 +78,7 @@ pub fn meal_contents<'a, 'b: 'a>(
 			text!("Leftovers:"),
 			checkbox("", meal_stub.leftovers)
 				.on_toggle(move |_toggled| MealsMessage::ToggleLeftovers { date, time })
-				.style(|_theme, status: checkbox::Status| checkbox::Style {
-					background: match status {
-						checkbox::Status::Active { is_checked: true }
-						| checkbox::Status::Hovered { is_checked: true } => {
-							color!(0x6A4A77).into()
-						}
-						_ => color!(0x2C1E31).into(),
-					},
-					icon_color: color!(0x1B121F),
-					border: border::color(color!(0x6A4A77)).width(2).rounded(2),
-					text_color: None,
-				})
+				.style(|_theme, status| checkbox_style(status))
 		]
 		.spacing(10)
 		.into()

@@ -1,13 +1,20 @@
 use bytes::Bytes;
 use chrono::NaiveDate;
-use iced::{widget::row, Alignment, Element, Task};
+use iced::{
+	widget::{column, container, row},
+	Alignment, Element, Length, Task,
+};
 use meals_database::{Database, MealPlan, MealStub, Time};
 use std::rc::Rc;
 use uuid::Uuid;
 
-use crate::{calendar::Calendar, scrollable_menu::ScrollableMenuMessage, Message};
+use crate::{
+	calendar::Calendar,
+	scrollable_menu::{ScrollableMenu, ScrollableMenuMessage},
+	Message,
+};
 
-use super::{MealsChooser, MealsList, RandomMealChooser};
+use super::{shopping_list_component::ShoppingList, MealsChooser, MealsList, RandomMealChooser};
 
 #[derive(Clone, Debug)]
 pub enum CalendarState {
@@ -22,7 +29,9 @@ pub struct Meals {
 	meals_chooser: MealsChooser,
 	meals_database: Rc<Database<MealPlan>>,
 	meals_list: MealsList,
+	meals_list_menu: ScrollableMenu,
 	random_meal_chooser: RandomMealChooser,
+	shopping_list: ShoppingList,
 }
 
 #[derive(Clone, Debug)]
@@ -35,9 +44,13 @@ pub enum MealsMessage {
 	FailedImage {
 		url: String,
 	},
+	GenerateShoppingList,
 	Image {
 		bytes: Bytes,
 		url: String,
+	},
+	PruneShoppingList {
+		shopping_list_index: usize,
 	},
 	RandomizeMeal,
 	SetCalendarState(CalendarState),
@@ -58,6 +71,10 @@ pub enum MealsMessage {
 	ToggleOpenMealInChooser {
 		id: Uuid,
 	},
+	ToggleShoppingListItem {
+		name: String,
+		shopping_list_index: usize,
+	},
 }
 
 impl From<ScrollableMenuMessage> for MealsMessage {
@@ -77,6 +94,10 @@ impl Meals {
 		let (random_meal_chooser, random_meal_chooser_task) =
 			RandomMealChooser::new(meals_database.clone());
 
+		let shopping_list = ShoppingList::new(meals_database.clone());
+
+		let (meals_list_menu, meals_list_menu_task) = ScrollableMenu::new();
+
 		(
 			Self {
 				calendar: Calendar::new(meals_database.clone()),
@@ -84,12 +105,15 @@ impl Meals {
 				meals_chooser,
 				meals_database,
 				meals_list,
+				meals_list_menu,
 				random_meal_chooser,
+				shopping_list,
 			},
 			Task::batch([
 				meals_list_task,
 				meals_chooser_task,
 				random_meal_chooser_task,
+				meals_list_menu_task,
 			]),
 		)
 	}
@@ -120,8 +144,8 @@ impl Meals {
 			}
 			MealsMessage::RandomizeMeal => self.random_meal_chooser.update(event),
 			MealsMessage::Scrollable(ref message) => {
-				if &self.meals_list.menu.id == message.get_id() {
-					self.meals_list.update(event)
+				if &self.meals_list_menu.id == message.get_id() {
+					self.meals_list_menu.update(message.clone())
 				} else if &self.random_meal_chooser.menu.id == message.get_id() {
 					self.random_meal_chooser.update(event)
 				} else {
@@ -187,7 +211,7 @@ impl Meals {
 					.iter_mut()
 					.find(|meal_stub| meal_stub.time == time)
 					.unwrap();
-				
+
 				meal_stub.leftovers = !meal_stub.leftovers;
 
 				drop(meal_plan);
@@ -198,12 +222,24 @@ impl Meals {
 			}
 			MealsMessage::ToggleOpenMeal { .. } => self.meals_list.update(event),
 			MealsMessage::ToggleOpenMealInChooser { .. } => self.meals_chooser.update(event),
+			MealsMessage::ToggleShoppingListItem { .. }
+			| MealsMessage::GenerateShoppingList
+			| MealsMessage::PruneShoppingList { .. } => self.shopping_list.update(event),
 		}
 	}
 
 	pub fn view(&self) -> Element<MealsMessage> {
 		row!(
-			self.meals_list.view(),
+			container(
+				self.meals_list_menu.view(
+					column![self.shopping_list.view(), self.meals_list.view()]
+						.spacing(10)
+						.into(),
+					vec![]
+				)
+			)
+			.width(400)
+			.height(Length::Fill),
 			match self.calendar_state {
 				CalendarState::Calendar => self.calendar.view(),
 				CalendarState::Chooser { .. } => self.meals_chooser.view(),

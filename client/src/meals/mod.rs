@@ -3,6 +3,7 @@ mod meal_component;
 mod meals_chooser_component;
 mod meals_list_component;
 mod meals_random_chooser_component;
+mod shopping_list_component;
 
 pub use component::CalendarState;
 pub use component::Meals;

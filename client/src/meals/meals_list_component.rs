@@ -22,24 +22,20 @@ use super::{get_meal_color, meal_contents, MealsMessage};
 pub struct MealsList {
 	images: HashMap<String, image::Handle>,
 	meals_database: Rc<Database<MealPlan>>,
-	pub menu: ScrollableMenu,
 	opened_meals: HashSet<(NaiveDate, Time)>,
 	width: u16,
 }
 
 impl MealsList {
 	pub fn new(meals_database: Rc<Database<MealPlan>>) -> (Self, Task<Message>) {
-		let (menu, task) = ScrollableMenu::new();
 		(
 			Self {
 				images: HashMap::new(),
 				meals_database,
 				opened_meals: HashSet::new(),
 				width: 400,
-
-				menu,
 			},
-			Task::batch([task]),
+			Task::none(),
 		)
 	}
 
@@ -66,7 +62,6 @@ impl MealsList {
 					Task::done(Message::FetchImage { meal_id: id, url })
 				}
 			}
-			MealsMessage::Scrollable(message) => self.menu.update(message),
 			_ => unreachable!(),
 		}
 	}
@@ -169,9 +164,8 @@ impl MealsList {
 			}
 		}
 
-		container(self.menu.view(meals_list.into(), vec![]))
+		container(meals_list)
 			.width(self.width)
-			.height(Length::Fill)
 			.into()
 	}
 }
