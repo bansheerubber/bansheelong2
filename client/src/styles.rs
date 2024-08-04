@@ -35,3 +35,12 @@ pub fn danger_button(theme: &Theme) -> button::Style {
 		shadow: Shadow::default(),
 	}
 }
+
+pub fn invisible_button(theme: &Theme) -> button::Style {
+	button::Style {
+		background: None,
+		text_color: theme.palette().text,
+		border: Border::default(),
+		shadow: Shadow::default(),
+	}
+}

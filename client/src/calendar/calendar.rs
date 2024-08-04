@@ -2,7 +2,7 @@ use chrono::{Datelike, Days, NaiveDate, Weekday};
 use iced::{
 	color,
 	widget::{button, column, container, row, text},
-	Alignment, Border, Color, Element, Length, Shadow, Theme,
+	Alignment, Border, Color, Element, Length, Shadow, Task, Theme,
 };
 use meals_database::{Database, MealPlan};
 use std::rc::Rc;
@@ -10,8 +10,9 @@ use std::rc::Rc;
 use crate::{
 	meals::{CalendarState, MealsMessage},
 	pt,
+	styles::invisible_button,
 	widgets::circle,
-	Message,
+	Message, ICONS,
 };
 
 const MONTH: [&'static str; 12] = [
@@ -54,10 +55,14 @@ impl Calendar {
 		7 * DAY_SIZE + 6 * DAY_SPACING
 	}
 
-	pub fn update(&mut self, event: MealsMessage) -> Option<Message> {
+	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
+			MealsMessage::AddMonth(amount) => {
+				self.month += amount as u32;
+			}
 			_ => unreachable!(),
 		}
+		Task::none()
 	}
 
 	pub fn view(&self) -> Element<MealsMessage> {
@@ -126,10 +131,21 @@ impl Calendar {
 
 		container(
 			column![
-				text!("{}", MONTH[month as usize])
-					.size(pt(25))
-					.width(Length::Fill)
-					.center(),
+				row![
+					button(text!("\u{e408}").size(pt(35)).font(ICONS))
+						.on_press(MealsMessage::AddMonth(-1))
+						.padding(0)
+						.style(|theme, _status| invisible_button(theme)),
+					text!("{}", MONTH[month as usize])
+						.size(pt(25))
+						.width(Length::Fill)
+						.center(),
+					button(text!("\u{e409}").size(pt(35)).font(ICONS))
+						.on_press(MealsMessage::AddMonth(1))
+						.padding(0)
+						.style(|theme, _status| invisible_button(theme)),
+				]
+				.align_y(Alignment::Center),
 				days
 			]
 			.align_x(Alignment::Center)
