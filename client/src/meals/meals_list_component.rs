@@ -62,7 +62,7 @@ impl MealsList {
 					self.opened_meals.insert((date, time));
 					let url = meal_plan.all_meals.get(&id).unwrap().image.clone();
 
-					Task::done(Message::FetchImage { url })
+					Task::done(Message::FetchImage { meal_id: id, url })
 				}
 			}
 			MealsMessage::Scrollable(message) => self.menu.update(message),

@@ -63,7 +63,7 @@ impl MealsChooser {
 				let meal = meal_plan.all_meals.get(&id).unwrap();
 				let url = meal.image.clone();
 
-				Task::done(Message::FetchImage { url })
+				Task::done(Message::FetchImage { meal_id: id, url })
 			}
 			MealsMessage::Scrollable(message) => self.menu.update(message),
 			_ => unreachable!(),

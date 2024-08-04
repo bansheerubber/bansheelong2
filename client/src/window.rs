@@ -2,6 +2,9 @@ use iced::theme::palette::{Background, Danger, Extended, Pair, Primary, Secondar
 use iced::theme::Palette;
 use iced::widget::{container, row, text, Space};
 use iced::{alignment, color, Element, Length, Subscription, Task, Theme};
+use std::io::{Read, Write};
+use std::path::Path;
+use uuid::Uuid;
 
 use crate::meals::{Meals, MealsMessage};
 use crate::storage::{Storage, StorageMessage};
@@ -19,7 +22,7 @@ pub struct Window {
 
 #[derive(Clone, Debug)]
 pub enum Message {
-	FetchImage { url: String },
+	FetchImage { meal_id: Uuid, url: String },
 	Meals(MealsMessage),
 	Noop,
 	RefetchWeather,
@@ -48,14 +51,32 @@ impl Window {
 
 	pub fn update(&mut self, message: Message) -> Task<Message> {
 		let message = match message {
-			Message::FetchImage { url } => {
-				return Task::perform(download_image(url.clone()), move |bytes| match bytes {
-					Some(bytes) => Message::Meals(MealsMessage::Image {
-						bytes,
+			Message::FetchImage { meal_id, url } => {
+				let image_file_name = format!("./meals-images/{}", meal_id);
+				let image_path = Path::new(&image_file_name);
+				if image_path.exists() {
+					let mut file = std::fs::File::open(image_path).unwrap();
+					let mut buffer = vec![];
+					file.read_to_end(&mut buffer).unwrap();
+
+					return Task::done(Message::Meals(MealsMessage::Image {
+						bytes: buffer.into(),
 						url: url.clone(),
-					}),
+					}));
+				}
+
+				return Task::perform(download_image(url.clone()), move |bytes| match bytes {
+					Some(bytes) => {
+						let mut file = std::fs::File::create(&image_file_name).unwrap();
+						file.write_all(&bytes).unwrap();
+
+						Message::Meals(MealsMessage::Image {
+							bytes,
+							url: url.clone(),
+						})
+					}
 					None => Message::Meals(MealsMessage::FailedImage { url: url.clone() }),
-				})
+				});
 			}
 			Message::Meals(message) => return self.meals.update(message),
 			Message::Noop => None,

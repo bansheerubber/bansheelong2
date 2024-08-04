@@ -61,7 +61,7 @@ impl RandomMealChooser {
 				let url = meal.image.clone();
 				self.current_meal_id = meal.id;
 
-				Task::done(Message::FetchImage { url })
+				Task::done(Message::FetchImage { meal_id: meal.id, url })
 			}
 			MealsMessage::Scrollable(message) => self.menu.update(message),
 			_ => unreachable!(),
