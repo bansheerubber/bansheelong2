@@ -1,4 +1,4 @@
-use chrono::{Datelike, Days, NaiveDate, Weekday};
+use chrono::{Datelike, Days, Local, Months, NaiveDate, Weekday};
 use iced::{
 	color,
 	widget::{button, column, container, row, text},
@@ -36,18 +36,18 @@ const DAY_SPACING: u16 = 4;
 
 pub struct Calendar {
 	meals_database: Rc<Database<MealPlan>>,
-	month: u32,
-	year: i32,
+	start: NaiveDate,
 }
 
 const MEAL_COLORS: [Color; 3] = [color!(0xDBCD51), color!(0x58B7CE), color!(0xE059E0)];
 
 impl Calendar {
 	pub fn new(meals_database: Rc<Database<MealPlan>>) -> Self {
+		let start = Local::now().date_naive().with_day(1).unwrap();
+
 		Self {
 			meals_database,
-			month: 8,
-			year: 2024,
+			start,
 		}
 	}
 
@@ -58,7 +58,17 @@ impl Calendar {
 	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
 			MealsMessage::AddMonth(amount) => {
-				self.month += amount as u32;
+				if amount > 0 {
+					self.start = self
+						.start
+						.checked_add_months(Months::new(amount as u32))
+						.unwrap();
+				} else {
+					self.start = self
+						.start
+						.checked_sub_months(Months::new(amount.abs() as u32))
+						.unwrap();
+				}
 			}
 			_ => unreachable!(),
 		}
@@ -66,17 +76,19 @@ impl Calendar {
 	}
 
 	pub fn view(&self) -> Element<MealsMessage> {
-		let mut start = NaiveDate::from_ymd_opt(self.year, self.month, 1).unwrap();
-		let month = start.month0();
+		let current_year = Local::now().date_naive().year();
+		let mut iter = self.start.clone();
+		let month0 = iter.month0();
 
-		while start.weekday() != Weekday::Sun {
-			start = start.checked_sub_days(Days::new(1)).unwrap();
+		while iter.weekday() != Weekday::Sun {
+			iter = iter.checked_sub_days(Days::new(1)).unwrap();
 		}
 
 		let meal_plan = self.meals_database.get();
 		let mut days = column(vec![]).spacing(DAY_SPACING);
-		let mut iter = start.clone();
-		while (iter.month() <= self.month && iter.year() == self.year) || iter.year() < self.year {
+		while (iter.month() <= self.start.month() && iter.year() == self.start.year())
+			|| iter.year() < self.start.year()
+		{
 			let mut week = row(vec![]).spacing(DAY_SPACING);
 			for _ in 0..7 {
 				let meals = meal_plan.planned_meals.get(&iter);
@@ -136,10 +148,18 @@ impl Calendar {
 						.on_press(MealsMessage::AddMonth(-1))
 						.padding(0)
 						.style(|theme, _status| invisible_button(theme)),
-					text!("{}", MONTH[month as usize])
-						.size(pt(25))
-						.width(Length::Fill)
-						.center(),
+					text!(
+						"{}{}",
+						MONTH[month0 as usize],
+						if current_year != self.start.year() {
+							format!(" ({})", self.start.year())
+						} else {
+							"".into()
+						}
+					)
+					.size(pt(25))
+					.width(Length::Fill)
+					.center(),
 					button(text!("\u{e409}").size(pt(35)).font(ICONS))
 						.on_press(MealsMessage::AddMonth(1))
 						.padding(0)

@@ -178,7 +178,6 @@ impl ScrollableMenu {
 		.padding(Padding::default().top(20).bottom(20).right(15));
 
 		column = column.push(contents);
-		column = column.push(container(text!("")).height(500));
 
 		scrollable(column)
 			.id(self.id.clone())
