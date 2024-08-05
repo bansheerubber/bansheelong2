@@ -75,7 +75,9 @@ impl ShoppingList {
 				let mut meal_plan = self.meals_database.get_mut();
 
 				let new_shopping_list = meal_plan.generate_shopping_list();
-				meal_plan.shopping_list.push(new_shopping_list);
+				if let Some(new_shopping_list) = new_shopping_list {
+					meal_plan.shopping_list.push(new_shopping_list);
+				}
 
 				drop(meal_plan);
 

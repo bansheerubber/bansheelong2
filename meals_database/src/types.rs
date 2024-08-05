@@ -1,6 +1,9 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Display};
+use std::{
+	collections::{HashMap, HashSet},
+	fmt::Display,
+};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
@@ -246,12 +249,24 @@ pub struct MealPlan {
 }
 
 impl MealPlan {
-	pub fn generate_shopping_list(&self) -> ShoppingListInfo {
+	pub fn generate_shopping_list(&self) -> Option<ShoppingListInfo> {
 		let mut items: HashMap<String, ShoppingListItem> = HashMap::new();
 
+		let mut meals_in_shopping_list_already: HashSet<(NaiveDate, Uuid)> = HashSet::new();
+		for shopping_list in self.shopping_list.iter() {
+			for meal_stub in shopping_list.for_meals.iter() {
+				meals_in_shopping_list_already.insert((meal_stub.date, meal_stub.id));
+			}
+		}
+
+		let mut for_meals = vec![];
 		for meals in self.planned_meals.values() {
 			for meal_stub in meals.iter() {
 				if meal_stub.leftovers {
+					continue;
+				}
+
+				if meals_in_shopping_list_already.contains(&(meal_stub.date, meal_stub.id)) {
 					continue;
 				}
 
@@ -267,15 +282,18 @@ impl MealPlan {
 						item.amount = item.amount.add(&ingredient.amount).unwrap();
 					}
 				}
+
+				for_meals.push(meal_stub.clone());
 			}
 		}
 
 		let mut items = items.into_values().collect::<Vec<_>>();
 		items.sort_by(|item1, item2| item1.amount.units.cmp(&item2.amount.units));
 
-		ShoppingListInfo {
-			items,
-			for_meals: vec![],
+		if items.len() != 0 {
+			Some(ShoppingListInfo { items, for_meals })
+		} else {
+			None
 		}
 	}
 }
