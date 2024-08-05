@@ -1,13 +1,13 @@
 use std::rc::Rc;
 
 use iced::{
-	widget::{button, checkbox, column, container, row, text, Space},
-	Alignment, Element, Length, Task, Theme,
+	widget::{button, checkbox, column, container, row, text},
+	Element, Length, Task, Theme,
 };
 use meals_database::{Database, MealPlan, ShoppingListInfo, ShoppingListItem};
 
 use crate::{
-	styles::{checkbox_style, primary_button, subdued_button},
+	styles::{checkbox_style, primary_button},
 	Message,
 };
 
@@ -128,33 +128,24 @@ impl ShoppingList {
 		Task::none()
 	}
 
-	pub fn view(&self) -> Element<MealsMessage> {
+	pub fn view(&self) -> Option<Element<MealsMessage>> {
 		let meal_plan = self.meals_database.get();
-
-		let generate_shopping_list_button: Element<MealsMessage> =
-			if meal_plan.shopping_list.len() == 0 {
-				button(
-					container(text!("Generate shopping list"))
-						.align_x(Alignment::Center)
-						.width(Length::Fill),
+		if meal_plan.shopping_list.len() == 0 {
+			None
+		} else {
+			Some(
+				column(
+					meal_plan
+						.shopping_list
+						.iter()
+						.enumerate()
+						.map(|(index, shopping_list)| {
+							self.view_shopping_list(shopping_list, index)
+						}),
 				)
-				.on_press(MealsMessage::GenerateShoppingList)
-				.width(Length::Fill)
-				.style(|theme, _status| subdued_button(theme))
-				.into()
-			} else {
-				container(Space::new(0, 0)).into()
-			};
-
-		let mut column = column(vec![generate_shopping_list_button]).spacing(10);
-		column = column.extend(
-			meal_plan
-				.shopping_list
-				.iter()
-				.enumerate()
-				.map(|(index, shopping_list)| self.view_shopping_list(shopping_list, index)),
-		);
-
-		column.into()
+				.spacing(10)
+				.into(),
+			)
+		}
 	}
 }

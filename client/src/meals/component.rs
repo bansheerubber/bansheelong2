@@ -1,7 +1,7 @@
 use bytes::Bytes;
 use chrono::NaiveDate;
 use iced::{
-	widget::{column, container, row},
+	widget::{button, column, container, row, text},
 	Alignment, Element, Length, Task,
 };
 use meals_database::{Database, MealPlan, MealStub, Time};
@@ -11,6 +11,7 @@ use uuid::Uuid;
 use crate::{
 	calendar::Calendar,
 	scrollable_menu::{ScrollableMenu, ScrollableMenuMessage},
+	styles::primary_button,
 	Message,
 };
 
@@ -229,15 +230,26 @@ impl Meals {
 	}
 
 	pub fn view(&self) -> Element<MealsMessage> {
+		let mut column = column(vec![]).spacing(10);
+		if let Some(shopping_list) = self.shopping_list.view() {
+			column = column.push(shopping_list);
+		}
+
+		column = column.push(self.meals_list.view());
+
 		row!(
-			container(
-				self.meals_list_menu.view(
-					column![self.shopping_list.view(), self.meals_list.view()]
-						.spacing(10)
-						.into(),
-					vec![]
-				)
-			)
+			container(self.meals_list_menu.view(
+				column.into(),
+				vec![button(
+						container(text!("Generate shopping list"))
+							.align_x(Alignment::Center)
+							.width(Length::Fill),
+					)
+					.on_press(MealsMessage::GenerateShoppingList)
+					.width(Length::Fill)
+					.style(|theme, _status| primary_button(theme))
+					.into()]
+			))
 			.width(400)
 			.height(Length::Fill),
 			match self.calendar_state {
