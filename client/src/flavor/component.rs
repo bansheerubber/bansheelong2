@@ -25,8 +25,6 @@ impl Flavor {
 
 		let image_index = 18;
 
-		println!("{:?}", paths);
-
 		Self {
 			handle: image::Handle::from_path(paths[image_index].clone()),
 			image_index,
