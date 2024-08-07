@@ -7,15 +7,16 @@ use iced::{
 };
 
 mod calendar;
+mod flavor;
 mod meals;
 mod scrollable_menu;
+mod storage;
 mod styles;
 mod todos;
 mod util;
 mod weather;
 mod widgets;
 mod window;
-mod storage;
 
 pub use window::Message;
 

@@ -1,11 +1,12 @@
 use iced::theme::palette::{Background, Danger, Extended, Pair, Primary, Secondary, Success};
 use iced::theme::Palette;
-use iced::widget::{container, row, text, Space};
+use iced::widget::{column, container, row, text, Space};
 use iced::{alignment, color, Element, Length, Subscription, Task, Theme};
 use std::io::{Read, Write};
 use std::path::Path;
 use uuid::Uuid;
 
+use crate::flavor::{Flavor, FlavorMessage};
 use crate::meals::{Meals, MealsMessage};
 use crate::storage::{self, Storage, StorageMessage};
 use crate::todos::{Todos, TodosMessage};
@@ -14,6 +15,7 @@ use crate::weather::{Weather, WeatherMessage};
 use crate::WINDOW_HEIGHT;
 
 pub struct Window {
+	flavor: Flavor,
 	meals: Meals,
 	storage: Storage,
 	todos: Todos,
@@ -23,6 +25,7 @@ pub struct Window {
 #[derive(Clone, Debug)]
 pub enum Message {
 	FetchImage { meal_id: Uuid, url: String },
+	Flavor(FlavorMessage),
 	Meals(MealsMessage),
 	Noop,
 	RefetchWeather,
@@ -36,6 +39,7 @@ impl Window {
 		let (meals, task) = Meals::new();
 		(
 			Self {
+				flavor: Flavor::new(),
 				meals,
 				storage: Storage::new(),
 				todos: Todos::new(),
@@ -81,6 +85,7 @@ impl Window {
 					None => Message::Meals(MealsMessage::FailedImage { url: url.clone() }),
 				});
 			}
+			Message::Flavor(message) => return self.flavor.update(message),
 			Message::Meals(message) => return self.meals.update(message),
 			Message::Noop => None,
 			Message::RefetchWeather => {
@@ -115,7 +120,10 @@ impl Window {
 			// self.todos.view().map(Message::Todos),
 			self.meals.view().map(Message::Meals),
 			Space::with_width(20),
-			self.storage.view().map(Message::Storage),
+			column![
+				self.storage.view().map(Message::Storage),
+				self.flavor.view().map(Message::Flavor),
+			]
 		])
 		.width(Length::Fill)
 		.height(WINDOW_HEIGHT)

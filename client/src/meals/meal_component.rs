@@ -1,5 +1,4 @@
 use iced::{
-	border, color,
 	widget::{checkbox, column, container, image, row, text, Column, Space},
 	Element, Length, Theme,
 };
