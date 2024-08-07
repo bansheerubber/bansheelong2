@@ -9,10 +9,12 @@ use iced::{
 use crate::Message;
 
 #[derive(Clone, Debug)]
-pub enum StorageMessage {}
+pub enum StorageMessage {
+	Update { data: StorageData },
+}
 
 bitflags! {
-	#[derive(Default)]
+	#[derive(Clone, Debug, Default)]
 	pub struct JobStatusFlags: u64 {
 		const IDLE                           = 0;
 		const GENERAL_ERROR	                 = 1 << 0;
@@ -31,14 +33,16 @@ bitflags! {
 	}
 }
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct StorageData {
-	btrfs_backup_count: u64,
-	btrfs_total_size: u64,
-	btrfs_used_size: u64,
-	job_flags: JobStatusFlags,
-	total_size: u64,
-	used_size: u64,
+	pub btrfs_backup_count: u64,
+	pub btrfs_total_size: u64,
+	pub btrfs_used_size: u64,
+	pub dailies: u8,
+	pub job_flags: JobStatusFlags,
+	pub total_size: u64,
+	pub used_size: u64,
+	pub weeklies: u8,
 }
 
 pub struct Storage {
@@ -114,7 +118,11 @@ impl Storage {
 		}
 	}
 
-	pub fn update(&self, _event: StorageMessage) -> Task<Message> {
+	pub fn update(&mut self, event: StorageMessage) -> Task<Message> {
+		match event {
+			StorageMessage::Update { data } => self.data = Some(data),
+		}
+
 		Task::none()
 	}
 

@@ -612,6 +612,7 @@ dependencies = [
  "bytes",
  "chrono",
  "env_logger",
+ "futures",
  "iced",
  "log",
  "meals_database",

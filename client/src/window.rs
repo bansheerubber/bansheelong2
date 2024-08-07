@@ -7,7 +7,7 @@ use std::path::Path;
 use uuid::Uuid;
 
 use crate::meals::{Meals, MealsMessage};
-use crate::storage::{Storage, StorageMessage};
+use crate::storage::{self, Storage, StorageMessage};
 use crate::todos::{Todos, TodosMessage};
 use crate::util::download_image;
 use crate::weather::{Weather, WeatherMessage};
@@ -46,7 +46,10 @@ impl Window {
 	}
 
 	pub fn subscription(&self) -> Subscription<Message> {
-		iced::time::every(std::time::Duration::from_secs(300)).map(|_| Message::RefetchWeather)
+		Subscription::batch([
+			iced::time::every(std::time::Duration::from_secs(300)).map(|_| Message::RefetchWeather),
+			Subscription::run(storage::socket).map(Message::Storage),
+		])
 	}
 
 	pub fn update(&mut self, message: Message) -> Task<Message> {
