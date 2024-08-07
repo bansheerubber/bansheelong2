@@ -235,6 +235,15 @@ impl Meals {
 			column = column.push(shopping_list);
 		}
 
+		let meal_plan = self.meals_database.get();
+		let size = meal_plan
+			.planned_meals
+			.values()
+			.fold(0, |prev, meals| prev + meals.len());
+
+		let min_height = (320u16).saturating_sub((40 * size + 10 * (size - 1)) as u16);
+		drop(meal_plan);
+
 		column = column.push(self.meals_list.view());
 
 		row!(
@@ -248,7 +257,8 @@ impl Meals {
 					.on_press(MealsMessage::GenerateShoppingList)
 					.width(Length::Fill)
 					.style(|theme, _status| primary_button(theme))
-					.into()]
+					.into()],
+				min_height.saturating_sub(10),
 			))
 			.width(400)
 			.height(Length::Fill),

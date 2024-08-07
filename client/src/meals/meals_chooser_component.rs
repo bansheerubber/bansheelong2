@@ -151,7 +151,7 @@ impl MealsChooser {
 
 		container(
 			self.menu
-				.view(column![meals_list].spacing(10).into(), buttons),
+				.view(column![meals_list].spacing(10).into(), buttons, 0),
 		)
 		.width(Length::Fill)
 		.height(Length::Fill)

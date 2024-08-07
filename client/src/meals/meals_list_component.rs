@@ -11,7 +11,6 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
-	scrollable_menu::ScrollableMenu,
 	styles::{danger_button, primary_button},
 	widgets::circle,
 	Message,

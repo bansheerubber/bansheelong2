@@ -7,7 +7,7 @@ use iced::{
 	border::Radius,
 	color,
 	task::Handle,
-	widget::{column, scrollable, Button},
+	widget::{column, scrollable, Button, Space},
 	Border, Color, Element, Length, Padding, Task, Theme,
 };
 
@@ -160,6 +160,7 @@ impl ScrollableMenu {
 		&'a self,
 		contents: Element<'a, Message>,
 		buttons: Vec<Button<'a, Message>>,
+		min_height: u16,
 	) -> Element<'a, Message>
 	where
 		Message: Clone + From<ScrollableMenuMessage>,
@@ -178,6 +179,7 @@ impl ScrollableMenu {
 		.padding(Padding::default().top(20).bottom(20).right(15));
 
 		column = column.push(contents);
+		column = column.push(Space::new(0, min_height.saturating_sub(20)));
 
 		scrollable(column)
 			.id(self.id.clone())

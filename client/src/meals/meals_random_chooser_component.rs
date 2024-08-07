@@ -135,6 +135,7 @@ impl RandomMealChooser {
 				.spacing(10)
 				.into(),
 				buttons,
+				0,
 			),
 		)
 		.width(Length::Fill)
