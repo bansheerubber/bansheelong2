@@ -3,4 +3,4 @@ resolver = "2"
 members = [
 	"client",
 	"meals_database"
-]
+, "meals_database_server"]

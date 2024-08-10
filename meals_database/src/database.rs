@@ -1,14 +1,15 @@
 use serde::{Deserialize, Serialize};
 use std::{
-	cell::{Ref, RefCell, RefMut},
-	io::{BufReader, BufWriter}, ops::Deref,
+	io::{BufReader, BufWriter},
+	ops::Deref,
+	sync::{RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
 pub struct Database<T>
 where
 	T: Serialize + for<'a> Deserialize<'a> + Default,
 {
-	data: RefCell<T>,
+	data: RwLock<T>,
 	path: String,
 }
 
@@ -18,27 +19,27 @@ where
 {
 	pub fn new(path: &str) -> Self {
 		Self {
-			data: RefCell::new(T::default()),
+			data: RwLock::new(T::default()),
 			path: path.into(),
 		}
 	}
 
-	pub fn get(&self) -> Ref<T> {
-		self.data.borrow()
+	pub fn get(&self) -> RwLockReadGuard<T> {
+		self.data.read().unwrap()
 	}
 
-	pub fn get_mut(&self) -> RefMut<T> {
-		self.data.borrow_mut()
+	pub fn get_mut(&self) -> RwLockWriteGuard<T> {
+		self.data.write().unwrap()
 	}
 
 	pub fn save(&self) {
-		let data = self.data.borrow();
+		let data = self.data.read().unwrap();
 		let file = BufWriter::new(std::fs::File::create(&self.path).unwrap());
 		serde_json::to_writer(file, data.deref()).unwrap();
 	}
 
 	pub fn load(&mut self) {
 		let file = BufReader::new(std::fs::File::open(&self.path).unwrap());
-		self.data = RefCell::new(serde_json::from_reader(file).unwrap());
+		self.data = RwLock::new(serde_json::from_reader(file).unwrap());
 	}
 }
