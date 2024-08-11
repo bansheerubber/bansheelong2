@@ -3,9 +3,9 @@ use iced::{
 	widget::{button, column, container, image, row, text},
 	Alignment, Element, Length, Task, Theme,
 };
-use meals_database::{Database, MealInfo, MealPlan};
+use meals_database::{MealInfo, MealPlan, RestDatabase};
 use rand::seq::IteratorRandom;
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, sync::Arc};
 use uuid::Uuid;
 
 use crate::{
@@ -20,12 +20,12 @@ pub struct RandomMealChooser {
 	current_date: NaiveDate,
 	current_meal_id: Uuid,
 	images: HashMap<String, image::Handle>,
-	meals_database: Rc<Database<MealPlan>>,
+	meals_database: Arc<RestDatabase<MealPlan>>,
 	pub menu: ScrollableMenu,
 }
 
 impl RandomMealChooser {
-	pub fn new(meals_database: Rc<Database<MealPlan>>) -> (Self, Task<Message>) {
+	pub fn new(meals_database: Arc<RestDatabase<MealPlan>>) -> (Self, Task<Message>) {
 		let (menu, task) = ScrollableMenu::new();
 		(
 			Self {
@@ -61,7 +61,10 @@ impl RandomMealChooser {
 				let url = meal.image.clone();
 				self.current_meal_id = meal.id;
 
-				Task::done(Message::FetchImage { meal_id: meal.id, url })
+				Task::done(Message::FetchImage {
+					meal_id: meal.id,
+					url,
+				})
 			}
 			MealsMessage::Scrollable(message) => self.menu.update(message),
 			_ => unreachable!(),

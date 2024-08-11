@@ -1,21 +1,15 @@
-use meals_database::{Database, MealPlan};
-use serde::Serialize;
+use meals_database::{Database, MealPlan, MealPlanMessage};
 use std::sync::RwLockReadGuard;
 use tokio::sync::broadcast::{self, Receiver, Sender};
 
-#[derive(Clone, Debug, Serialize)]
-pub enum MealsDatabaseServiceMessage {
-	Update,
-}
-
 pub struct MealsDatabaseService {
 	database: Database<MealPlan>,
-	sender: Sender<MealsDatabaseServiceMessage>,
+	sender: Sender<MealPlanMessage>,
 }
 
 impl MealsDatabaseService {
 	pub fn new() -> Self {
-		let (sender, _) = broadcast::channel::<MealsDatabaseServiceMessage>(16);
+		let (sender, _) = broadcast::channel::<MealPlanMessage>(16);
 
 		let mut database = Database::new("meals-database.json");
 		database.load();
@@ -26,15 +20,17 @@ impl MealsDatabaseService {
 	pub fn replace(&mut self, new_meal_plan: MealPlan) {
 		let mut meal_plan = self.database.get_mut();
 		*meal_plan = new_meal_plan;
+		drop(meal_plan);
+
 		self.database.save();
-		self.sender.send(MealsDatabaseServiceMessage::Update).unwrap();
+		self.sender.send(MealPlanMessage::Update).unwrap();
 	}
 
 	pub fn get(&self) -> RwLockReadGuard<MealPlan> {
 		self.database.get()
 	}
 
-	pub fn subscribe(&self) -> Receiver<MealsDatabaseServiceMessage> {
+	pub fn subscribe(&self) -> Receiver<MealPlanMessage> {
 		self.sender.subscribe()
 	}
 }

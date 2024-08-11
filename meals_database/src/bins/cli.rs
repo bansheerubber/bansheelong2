@@ -2,7 +2,30 @@ use meals_database::{Amount, Database, Ingredient, MealInfo, MealPlan, RecipeSte
 use std::{io::Write, str::FromStr};
 use uuid::Uuid;
 
-fn main() {
+#[tokio::main]
+async fn main() {
+	/*env_logger::init();
+
+	let (mut database, mut receiver): (RestDatabase<MealPlan>, Receiver<MealPlanMessage>) =
+		RestDatabase::new(
+			"http://0.0.0.0:8001/rest/meals/all",
+			"http://0.0.0.0:8001/rest/meals/replace",
+			"ws://0.0.0.0:8001/ws/meals-events",
+		)
+		.await;
+
+	database.load().await;
+	database.save().await;
+
+	select! {
+		message = receiver.recv().fuse() => {
+			println!("{:?}", message);
+		}
+		_ = database.recv_loop().fuse() => {
+
+		}
+	}*/
+
 	let mut database: Database<MealPlan> = Database::new("meals-database.json");
 	database.load();
 

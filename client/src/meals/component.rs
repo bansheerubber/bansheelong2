@@ -1,11 +1,13 @@
 use bytes::Bytes;
 use chrono::NaiveDate;
+use futures::{executor::block_on, select, FutureExt, SinkExt};
 use iced::{
+	stream,
 	widget::{button, column, container, row, text},
 	Alignment, Element, Length, Task,
 };
-use meals_database::{Database, MealPlan, MealStub, Time};
-use std::rc::Rc;
+use meals_database::{MealPlan, MealPlanMessage, MealStub, RestDatabase, Time};
+use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::{
@@ -28,7 +30,7 @@ pub struct Meals {
 	calendar: Calendar,
 	calendar_state: CalendarState,
 	meals_chooser: MealsChooser,
-	meals_database: Rc<Database<MealPlan>>,
+	meals_database: Arc<RestDatabase<MealPlan>>,
 	meals_list: MealsList,
 	meals_list_menu: ScrollableMenu,
 	random_meal_chooser: RandomMealChooser,
@@ -76,6 +78,7 @@ pub enum MealsMessage {
 		name: String,
 		shopping_list_index: usize,
 	},
+	Updated,
 }
 
 impl From<ScrollableMenuMessage> for MealsMessage {
@@ -86,9 +89,13 @@ impl From<ScrollableMenuMessage> for MealsMessage {
 
 impl Meals {
 	pub fn new() -> (Self, Task<Message>) {
-		let mut meals_database = Database::new("meals-database.json");
-		meals_database.load();
-		let meals_database = Rc::new(meals_database);
+		let (meals_database, mut meals_receiver) = block_on(RestDatabase::new(
+			"http://0.0.0.0:8001/rest/meals/all",
+			"http://0.0.0.0:8001/rest/meals/replace",
+			"ws://0.0.0.0:8001/ws/meals-events",
+		));
+
+		let meals_database = Arc::new(meals_database);
 
 		let (meals_list, meals_list_task) = MealsList::new(meals_database.clone());
 		let (meals_chooser, meals_chooser_task) = MealsChooser::new(meals_database.clone());
@@ -104,7 +111,7 @@ impl Meals {
 				calendar: Calendar::new(meals_database.clone()),
 				calendar_state: CalendarState::Calendar,
 				meals_chooser,
-				meals_database,
+				meals_database: meals_database.clone(),
 				meals_list,
 				meals_list_menu,
 				random_meal_chooser,
@@ -115,6 +122,23 @@ impl Meals {
 				meals_chooser_task,
 				random_meal_chooser_task,
 				meals_list_menu_task,
+				Task::stream(stream::channel(100, |mut output| async move {
+					loop {
+						select! {
+							_ = meals_database.recv_loop().fuse() => {}
+							message = meals_receiver.recv().fuse() => {
+								let Some(message) = message else {
+									unreachable!();
+								};
+
+								match message {
+									MealPlanMessage::Update => output.send(Message::Meals(MealsMessage::Updated)).await.unwrap()
+								}
+							}
+						}
+					}
+				})),
+				Task::done(Message::Meals(MealsMessage::Updated)),
 			]),
 		)
 	}
@@ -133,9 +157,11 @@ impl Meals {
 
 				drop(meal_plan);
 
-				self.meals_database.save();
-
-				Task::none()
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
 			}
 			MealsMessage::FailedImage { .. } | MealsMessage::Image { .. } => {
 				self.meals_list.update(event.clone());
@@ -170,11 +196,16 @@ impl Meals {
 
 				drop(meal_plan);
 
-				self.meals_database.save();
-
-				Task::done(Message::Meals(MealsMessage::SetCalendarState(
-					CalendarState::Calendar,
-				)))
+				let meals_database = self.meals_database.clone();
+				Task::batch([
+					Task::future(async move {
+						meals_database.save().await;
+						Message::Noop
+					}),
+					Task::done(Message::Meals(MealsMessage::SetCalendarState(
+						CalendarState::Calendar,
+					))),
+				])
 			}
 			MealsMessage::SetCalendarState(state) => {
 				self.calendar_state = state;
@@ -217,15 +248,25 @@ impl Meals {
 
 				drop(meal_plan);
 
-				self.meals_database.save();
-
-				Task::none()
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
 			}
 			MealsMessage::ToggleOpenMeal { .. } => self.meals_list.update(event),
 			MealsMessage::ToggleOpenMealInChooser { .. } => self.meals_chooser.update(event),
 			MealsMessage::ToggleShoppingListItem { .. }
 			| MealsMessage::GenerateShoppingList
 			| MealsMessage::PruneShoppingList { .. } => self.shopping_list.update(event),
+			MealsMessage::Updated => {
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.load().await;
+					log::info!("Updated meals database");
+					Message::Noop
+				})
+			}
 		}
 	}
 

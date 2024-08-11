@@ -6,6 +6,11 @@ use std::{
 };
 use uuid::Uuid;
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum MealPlanMessage {
+	Update,
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub enum Units {
 	#[default]

@@ -3,10 +3,10 @@ use iced::{
 	widget::{button, column, container, image, row, text},
 	Alignment, Border, Element, Length, Padding, Shadow, Task, Theme,
 };
-use meals_database::{Database, MealInfo, MealPlan};
+use meals_database::{MealInfo, MealPlan, RestDatabase};
 use std::{
 	collections::{HashMap, HashSet},
-	rc::Rc,
+	sync::Arc,
 };
 use uuid::Uuid;
 
@@ -21,13 +21,13 @@ use super::{meal_contents, CalendarState, MealsMessage};
 pub struct MealsChooser {
 	current_date: NaiveDate,
 	images: HashMap<String, image::Handle>,
-	meals_database: Rc<Database<MealPlan>>,
+	meals_database: Arc<RestDatabase<MealPlan>>,
 	pub menu: ScrollableMenu,
 	opened_meals: HashSet<Uuid>,
 }
 
 impl MealsChooser {
-	pub fn new(meals_database: Rc<Database<MealPlan>>) -> (Self, Task<Message>) {
+	pub fn new(meals_database: Arc<RestDatabase<MealPlan>>) -> (Self, Task<Message>) {
 		let (menu, task) = ScrollableMenu::new();
 		(
 			Self {

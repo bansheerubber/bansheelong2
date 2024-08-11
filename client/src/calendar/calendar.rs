@@ -3,8 +3,8 @@ use iced::{
 	widget::{button, column, container, row, text, Space},
 	Alignment, Border, Element, Length, Shadow, Task, Theme,
 };
-use meals_database::{Database, MealPlan};
-use std::{collections::HashMap, rc::Rc};
+use meals_database::{MealPlan, RestDatabase};
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{
 	meals::{get_meal_color, CalendarState, MealsMessage},
@@ -34,12 +34,12 @@ const DAY_FONT_SIZE: u32 = 18;
 const DAY_SPACING: u16 = 4;
 
 pub struct Calendar {
-	meals_database: Rc<Database<MealPlan>>,
+	meals_database: Arc<RestDatabase<MealPlan>>,
 	start: NaiveDate,
 }
 
 impl Calendar {
-	pub fn new(meals_database: Rc<Database<MealPlan>>) -> Self {
+	pub fn new(meals_database: Arc<RestDatabase<MealPlan>>) -> Self {
 		let start = Local::now().date_naive().with_day(1).unwrap();
 
 		Self {

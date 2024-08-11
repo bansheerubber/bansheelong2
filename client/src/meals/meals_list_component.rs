@@ -3,10 +3,10 @@ use iced::{
 	widget::{button, column, container, image, row, text, Space},
 	Alignment, Border, Color, Element, Length, Padding, Shadow, Task, Theme,
 };
-use meals_database::{Database, MealInfo, MealPlan, MealStub, Time};
+use meals_database::{MealInfo, MealPlan, MealStub, RestDatabase, Time};
 use std::{
 	collections::{HashMap, HashSet},
-	rc::Rc,
+	sync::Arc,
 };
 use uuid::Uuid;
 
@@ -20,13 +20,13 @@ use super::{get_meal_color, meal_contents, MealsMessage};
 
 pub struct MealsList {
 	images: HashMap<String, image::Handle>,
-	meals_database: Rc<Database<MealPlan>>,
+	meals_database: Arc<RestDatabase<MealPlan>>,
 	opened_meals: HashSet<(NaiveDate, Time)>,
 	width: u16,
 }
 
 impl MealsList {
-	pub fn new(meals_database: Rc<Database<MealPlan>>) -> (Self, Task<Message>) {
+	pub fn new(meals_database: Arc<RestDatabase<MealPlan>>) -> (Self, Task<Message>) {
 		(
 			Self {
 				images: HashMap::new(),
@@ -163,8 +163,6 @@ impl MealsList {
 			}
 		}
 
-		container(meals_list)
-			.width(self.width)
-			.into()
+		container(meals_list).width(self.width).into()
 	}
 }

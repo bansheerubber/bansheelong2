@@ -1,10 +1,9 @@
-use std::rc::Rc;
-
 use iced::{
 	widget::{button, checkbox, column, container, row, text},
 	Element, Length, Task, Theme,
 };
-use meals_database::{Database, MealPlan, ShoppingListInfo, ShoppingListItem};
+use meals_database::{MealPlan, RestDatabase, ShoppingListInfo, ShoppingListItem};
+use std::sync::Arc;
 
 use crate::{
 	styles::{checkbox_style, primary_button},
@@ -14,11 +13,11 @@ use crate::{
 use super::MealsMessage;
 
 pub struct ShoppingList {
-	meals_database: Rc<Database<MealPlan>>,
+	meals_database: Arc<RestDatabase<MealPlan>>,
 }
 
 impl ShoppingList {
-	pub fn new(meals_database: Rc<Database<MealPlan>>) -> Self {
+	pub fn new(meals_database: Arc<RestDatabase<MealPlan>>) -> Self {
 		Self { meals_database }
 	}
 
@@ -81,7 +80,11 @@ impl ShoppingList {
 
 				drop(meal_plan);
 
-				self.meals_database.save();
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
 			}
 			MealsMessage::PruneShoppingList {
 				shopping_list_index,
@@ -101,7 +104,11 @@ impl ShoppingList {
 
 				drop(meal_plan);
 
-				self.meals_database.save();
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
 			}
 			MealsMessage::ToggleShoppingListItem {
 				name,
@@ -122,12 +129,14 @@ impl ShoppingList {
 
 				drop(meal_plan);
 
-				self.meals_database.save();
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
 			}
 			_ => unreachable!(),
 		}
-
-		Task::none()
 	}
 
 	pub fn view(&self) -> Option<Element<MealsMessage>> {

@@ -29,7 +29,6 @@ impl Error {
 			Error::AuthorizationError { message } => Some(message),
 			Error::InternalServerError { message } => Some(message),
 			Error::PayloadProblem { message } => Some(message),
-			_ => None,
 		}
 	}
 
@@ -39,7 +38,6 @@ impl Error {
 			Error::AuthorizationError { .. } => Status::Forbidden,
 			Error::InternalServerError { .. } => Status::InternalServerError,
 			Error::PayloadProblem { .. } => Status::BadRequest,
-			_ => Status::InternalServerError,
 		}
 	}
 }

@@ -10,7 +10,10 @@ use crate::Context;
 
 #[get("/meals-events")]
 pub async fn meals_events_stream(context: &State<Context>, ws: WebSocket) -> Channel<'static> {
-	let mut receiver = context.meals_database.read().await.subscribe();
+	let meals_database = context.meals_database.read().await;
+	let mut receiver = meals_database.subscribe();
+	drop(meals_database);
+
 	ws.channel(move |mut stream| {
 		Box::pin(async move {
 			loop {
