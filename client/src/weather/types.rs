@@ -62,6 +62,7 @@ pub struct DailyDatum {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct HourlyDatum {
 	pub pop: f32,
+	#[serde(default)]
 	pub visibility: u16,
 	pub temp: f32,
 	pub feels_like: f32,
@@ -81,6 +82,7 @@ pub struct HourlyDatum {
 pub struct CurrentDatum {
 	pub sunrise: u64,
 	pub sunset: u64,
+	#[serde(default)]
 	pub visibility: u16,
 	pub temp: f32,
 	pub feels_like: f32,
