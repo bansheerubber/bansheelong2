@@ -25,9 +25,19 @@ pub async fn dial() -> Result<OneAPIResponse, OneAPIError> {
 	let response = response_result.unwrap();
 	match response.status() {
 		reqwest::StatusCode::OK => {
-			match response.json::<OneAPIResponse>().await {
+			let text = match response.text().await {
+				Ok(text) => text,
+				Err(error) => {
+					return Err(OneAPIError {
+						message: format!("Could not get text: {:?}", error),
+					})
+				}
+			};
+
+			match serde_json::from_str::<OneAPIResponse>(&text) {
 				Ok(result) => return Ok(result),
 				Err(error) => {
+					log::error!("{:?}", text);
 					return Err(OneAPIError {
 						message: format!("Could not deserialize JSON: {:?}", error),
 					})
