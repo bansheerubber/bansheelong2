@@ -9,7 +9,6 @@ use uuid::Uuid;
 use crate::flavor::{Flavor, FlavorMessage};
 use crate::meals::{Meals, MealsMessage};
 use crate::storage::{self, Storage, StorageMessage};
-use crate::todos::{Todos, TodosMessage};
 use crate::util::download_image;
 use crate::weather::{Weather, WeatherMessage};
 use crate::WINDOW_HEIGHT;
@@ -18,7 +17,6 @@ pub struct Window {
 	flavor: Flavor,
 	meals: Meals,
 	storage: Storage,
-	todos: Todos,
 	weather: Weather,
 }
 
@@ -30,7 +28,6 @@ pub enum Message {
 	Noop,
 	RefetchWeather,
 	Storage(StorageMessage),
-	Todos(TodosMessage),
 	Weather(WeatherMessage),
 }
 
@@ -42,7 +39,6 @@ impl Window {
 				flavor: Flavor::new(),
 				meals,
 				storage: Storage::new(),
-				todos: Todos::new(),
 				weather: Weather::new(),
 			},
 			Task::batch([Task::done(Message::RefetchWeather), task]),
@@ -94,7 +90,6 @@ impl Window {
 				})
 			}
 			Message::Storage(message) => return self.storage.update(message),
-			Message::Todos(message) => self.todos.update(message),
 			Message::Weather(message) => self.weather.update(message),
 		};
 

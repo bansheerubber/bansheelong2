@@ -12,7 +12,6 @@ mod meals;
 mod scrollable_menu;
 mod storage;
 mod styles;
-mod todos;
 mod util;
 mod weather;
 mod widgets;
