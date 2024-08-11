@@ -90,9 +90,9 @@ impl From<ScrollableMenuMessage> for MealsMessage {
 impl Meals {
 	pub fn new() -> (Self, Task<Message>) {
 		let (meals_database, mut meals_receiver) = block_on(RestDatabase::new(
-			"http://0.0.0.0:8001/rest/meals/all",
-			"http://0.0.0.0:8001/rest/meals/replace",
-			"ws://0.0.0.0:8001/ws/meals-events",
+			&std::env::var("BANSHEELONG2_GET_ALL_MEALS_URL").unwrap(),
+			&std::env::var("BANSHEELONG2_REPLACE_URL").unwrap(),
+			&std::env::var("BANSHEELONG2_WS_URL").unwrap(),
 		));
 
 		let meals_database = Arc::new(meals_database);
