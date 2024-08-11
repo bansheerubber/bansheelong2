@@ -1,3 +1,4 @@
 /target
 /meals-images
 meals-database.json
+.env.local
