@@ -218,7 +218,7 @@ impl Time {
 	}
 }
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct MealStub {
 	pub date: NaiveDate,
 	pub id: Uuid,

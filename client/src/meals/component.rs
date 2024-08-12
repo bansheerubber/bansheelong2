@@ -276,11 +276,50 @@ impl Meals {
 			| MealsMessage::PruneShoppingList { .. } => self.shopping_list.update(event),
 			MealsMessage::Updated => {
 				let meals_database = self.meals_database.clone();
-				Task::future(async move {
+				/*Task::future(async move {
 					meals_database.load().await;
 					log::info!("Updated meals database");
 					Message::Noop
-				})
+				})*/
+
+				Task::stream(stream::channel(100, |mut output| async move {
+					let meal_plan = meals_database.get();
+					let old_meals = meal_plan.planned_meals.clone();
+					drop(meal_plan);
+
+					meals_database.load().await;
+					log::info!("Updated meals database");
+
+					let meal_plan = meals_database.get();
+					for (date, planned_meals1) in old_meals.iter() {
+						let Some(planned_meals2) = meal_plan.planned_meals.get(&date) else {
+							for planned_meal in planned_meals1 {
+								output.send(Message::Meals(MealsMessage::CloseOpenMeal {
+									date: planned_meal.date,
+									time: planned_meal.time,
+								})).await.unwrap();
+							}
+
+							continue;
+						};
+
+						for planned_meal1 in planned_meals1.iter() {
+							let mut found = false;
+							for planned_meal2 in planned_meals2.iter() {
+								if planned_meal1 == planned_meal2 {
+									found = true;
+								}
+							}
+
+							if !found {
+								output.send(Message::Meals(MealsMessage::CloseOpenMeal {
+									date: *date,
+									time: planned_meal1.time,
+								})).await.unwrap();
+							}
+						}
+					}
+				}))
 			}
 		}
 	}
