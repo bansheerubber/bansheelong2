@@ -52,6 +52,11 @@ impl MealsChooser {
 				self.images.insert(url, image::Handle::from_bytes(bytes));
 				Task::none()
 			}
+			MealsMessage::ResetChooser => {
+				self.opened_meals.clear();
+				Task::none()
+			}
+			MealsMessage::Scrollable(message) => self.menu.update(message),
 			MealsMessage::ToggleOpenMealInChooser { id } => {
 				if self.opened_meals.contains(&id) {
 					self.opened_meals.remove(&id);
@@ -65,7 +70,6 @@ impl MealsChooser {
 
 				Task::done(Message::FetchImage { meal_id: id, url })
 			}
-			MealsMessage::Scrollable(message) => self.menu.update(message),
 			_ => unreachable!(),
 		}
 	}

@@ -44,6 +44,10 @@ impl MealsList {
 
 	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
+			MealsMessage::CloseOpenMeal { date, time } => {
+				self.opened_meals.remove(&(date, time));
+				Task::none()
+			}
 			MealsMessage::FailedImage { .. } => Task::none(),
 			MealsMessage::Image { bytes, url } => {
 				self.images.insert(url, image::Handle::from_bytes(bytes));

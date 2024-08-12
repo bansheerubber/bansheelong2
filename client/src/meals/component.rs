@@ -40,6 +40,10 @@ pub struct Meals {
 #[derive(Clone, Debug)]
 pub enum MealsMessage {
 	AddMonth(isize),
+	CloseOpenMeal {
+		date: NaiveDate,
+		time: Time,
+	},
 	DeletePlannedMeal {
 		date: NaiveDate,
 		time: Time,
@@ -56,6 +60,7 @@ pub enum MealsMessage {
 		shopping_list_index: usize,
 	},
 	RandomizeMeal,
+	ResetChooser,
 	SetCalendarState(CalendarState),
 	SelectMealForDate {
 		date: NaiveDate,
@@ -158,10 +163,13 @@ impl Meals {
 				drop(meal_plan);
 
 				let meals_database = self.meals_database.clone();
-				Task::future(async move {
-					meals_database.save().await;
-					Message::Noop
-				})
+				Task::batch([
+					Task::future(async move {
+						meals_database.save().await;
+						Message::Noop
+					}),
+					Task::done(Message::Meals(MealsMessage::CloseOpenMeal { date, time })),
+				])
 			}
 			MealsMessage::FailedImage { .. } | MealsMessage::Image { .. } => {
 				self.meals_list.update(event.clone());
@@ -213,11 +221,14 @@ impl Meals {
 				match &self.calendar_state {
 					CalendarState::Chooser { date } => {
 						self.meals_chooser.set_current_date(date.clone());
-						Task::done(Message::Meals(MealsMessage::Scrollable(
-							ScrollableMenuMessage::Reset {
-								id: self.meals_chooser.menu.id.clone(),
-							},
-						)))
+						Task::batch([
+							Task::done(Message::Meals(MealsMessage::Scrollable(
+								ScrollableMenuMessage::Reset {
+									id: self.meals_chooser.menu.id.clone(),
+								},
+							))),
+							Task::done(Message::Meals(MealsMessage::ResetChooser)),
+						])
 					}
 					CalendarState::RandomChooser { date } => {
 						self.random_meal_chooser.set_current_date(date.clone());
@@ -254,8 +265,12 @@ impl Meals {
 					Message::Noop
 				})
 			}
-			MealsMessage::ToggleOpenMeal { .. } => self.meals_list.update(event),
-			MealsMessage::ToggleOpenMealInChooser { .. } => self.meals_chooser.update(event),
+			MealsMessage::ToggleOpenMeal { .. } | MealsMessage::CloseOpenMeal { .. } => {
+				self.meals_list.update(event)
+			}
+			MealsMessage::ToggleOpenMealInChooser { .. } | MealsMessage::ResetChooser => {
+				self.meals_chooser.update(event)
+			}
 			MealsMessage::ToggleShoppingListItem { .. }
 			| MealsMessage::GenerateShoppingList
 			| MealsMessage::PruneShoppingList { .. } => self.shopping_list.update(event),
