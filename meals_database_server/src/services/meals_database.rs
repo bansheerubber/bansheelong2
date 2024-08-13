@@ -1,5 +1,5 @@
 use meals_database::{Database, MealPlan, MealPlanMessage};
-use std::sync::RwLockReadGuard;
+use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use tokio::sync::broadcast::{self, Receiver, Sender};
 
 pub struct MealsDatabaseService {
@@ -28,6 +28,14 @@ impl MealsDatabaseService {
 
 	pub fn get(&self) -> RwLockReadGuard<MealPlan> {
 		self.database.get()
+	}
+
+	pub fn get_mut(&self) -> RwLockWriteGuard<MealPlan> {
+		self.database.get_mut()
+	}
+	
+	pub fn save(&self) {
+		self.database.save();
 	}
 
 	pub fn subscribe(&self) -> Receiver<MealPlanMessage> {

@@ -2,5 +2,9 @@
 address = "bansheestorage"
 port = 8001
 
+[test]
+address = "0.0.0.0"
+port = 8000
+
 [default.shutdown]
 ctrlc = false

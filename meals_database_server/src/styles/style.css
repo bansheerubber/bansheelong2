@@ -1,0 +1,9 @@
+@import "tailwind.css";
+@import "components/shopping-list-item.css";
+
+body {
+	background-color: #38263F;
+
+	color: #FFDDF3;
+	font-family: 'Noto Sans';
+}

@@ -8,6 +8,7 @@ mod services;
 pub use context::Context;
 pub use error::Error;
 pub use error::Result;
+use routes::htmx_routes;
 use routes::rest_routes;
 use routes::ws_routes;
 
@@ -18,4 +19,5 @@ fn rocket() -> _ {
 		.manage(context::Context::new())
 		.mount("/rest/", rest_routes())
 		.mount("/ws/", ws_routes())
+		.mount("/", htmx_routes())
 }
