@@ -11,6 +11,16 @@ pub async fn get_root(context: &State<Context>) -> Result<Markup> {
 
 	let shopping_lists = &meal_plan.shopping_list;
 
+	if shopping_lists.len() == 0 {
+		return Ok(root(html! {
+			div class="flex flex-col items-center gap-4 pt-6 px-4" {
+				div class="shopping-list flex gap-2 text-lg w-full sm:w-[500px] p-2 justify-center" {
+					"No shopping lists available"
+				}
+			}
+		}));
+	}
+
 	Ok(root(html! {
 		div class="flex flex-col items-center gap-4 pt-6 px-4" {
 			@for (shopping_list_index, shopping_list) in shopping_lists.iter().enumerate() {
