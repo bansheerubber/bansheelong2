@@ -36,6 +36,7 @@ impl MealsDatabaseService {
 	
 	pub fn save(&self) {
 		self.database.save();
+		self.sender.send(MealPlanMessage::Update).unwrap();
 	}
 
 	pub fn subscribe(&self) -> Receiver<MealPlanMessage> {
