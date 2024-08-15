@@ -1,4 +1,5 @@
-use meals_database::{Amount, Database, Ingredient, MealInfo, MealPlan, RecipeStep, Units};
+use meals_database::{Amount, Database, Ingredient, MealInfo, MealPlan, MealPlanMessage, RecipeStep, RestDatabase, Units};
+use tokio::sync::mpsc::Receiver;
 use std::{io::Write, str::FromStr};
 use uuid::Uuid;
 
@@ -26,8 +27,15 @@ async fn main() {
 		}
 	}*/
 
-	let mut database: Database<MealPlan> = Database::new("meals-database.json");
-	database.load();
+	let (database, _): (RestDatabase<MealPlan>, Receiver<MealPlanMessage>) =
+		RestDatabase::new(
+			"http://bansheestorage-alt:8001/rest/meals/all",
+			"http://bansheestorage-alt:8001/rest/meals/replace",
+			"ws://bansheestorage-alt:8001/ws/meals-events",
+		)
+		.await;
+
+	database.load().await;
 
 	println!("1. Enter recipe");
 	println!("2. Delete recipe");
@@ -39,7 +47,7 @@ async fn main() {
 			"1" => {
 				let recipe = enter_recipe();
 				database.get_mut().all_meals.insert(recipe.id, recipe);
-				database.save();
+				database.save().await;
 				break;
 			}
 			_ => continue,

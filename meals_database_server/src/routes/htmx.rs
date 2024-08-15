@@ -1,5 +1,5 @@
 use maud::{html, Markup};
-use meals_database::{ShoppingListInfo, ShoppingListItem};
+use meals_database::{MealInfo, ShoppingListInfo, ShoppingListItem};
 use rocket::{form::Form, get, post, response::content::RawCss, FromForm, State};
 
 use crate::{Context, Result};
@@ -10,21 +10,44 @@ pub async fn get_root(context: &State<Context>) -> Result<Markup> {
 	let meal_plan = meal_plan.get();
 
 	let shopping_lists = &meal_plan.shopping_list;
+	let planned_meals = &meal_plan.planned_meals;
+	let all_meals = &meal_plan.all_meals;
 
-	if shopping_lists.len() == 0 {
-		return Ok(root(html! {
+	let shopping_list_markup = if shopping_lists.len() == 0 {
+		html! {
 			div class="flex flex-col items-center gap-4 pt-6 px-4" {
 				div class="shopping-list flex gap-2 text-lg w-full sm:w-[500px] p-2 justify-center" {
 					"No shopping lists available"
 				}
 			}
-		}));
+		}
+	} else {
+		html! {
+			@for (shopping_list_index, shopping_list) in shopping_lists.iter().enumerate() {
+				(render_shopping_list(shopping_list_index, &shopping_list))
+			}
+		}
+	};
+
+	let mut meals = vec![];
+	for meals_for_day in planned_meals.values() {
+		for meal_stub in meals_for_day.iter() {
+			if meal_stub.leftovers {
+				continue;
+			}
+
+			meals.push((meal_stub.date, all_meals.get(&meal_stub.id).unwrap()));
+		}
 	}
+
+	meals.sort_by(|(date1, _), (date2, _)| date1.cmp(date2));
 
 	Ok(root(html! {
 		div class="flex flex-col items-center gap-4 pt-6 px-4" {
-			@for (shopping_list_index, shopping_list) in shopping_lists.iter().enumerate() {
-				(render_shopping_list(shopping_list_index, &shopping_list))
+			(shopping_list_markup)
+
+			@for meal in meals.iter() {
+				(render_meal(meal.1))
 			}
 		}
 	}))
@@ -117,16 +140,42 @@ pub fn render_checkbox(
 				!shopping_list_item.have
 			))
 			checked[shopping_list_item.have]
-			type="checkbox"
-		{}
+			type="checkbox";
+	}
+}
+
+pub fn render_meal(meal_info: &MealInfo) -> Markup {
+	html! {
+		div class="meal flex flex-col gap-2 text-lg w-full sm:w-[500px] p-3 items-start" {
+			img class="w-full" src=(meal_info.image);
+			span { (meal_info.name) }
+			span { "Serves " (meal_info.serving_size) }
+			hr;
+			span { "Ingredients:" }
+			@for (index, ingredient) in meal_info.ingredients.iter().enumerate() {
+				div class="grid grid-cols-[2.25rem,1fr,2fr] w-full" {
+					span { (index + 1) "." }
+					span { (ingredient.amount.value) " " (format!("{}", ingredient.amount.units)) }
+					span { (ingredient.name) }
+				}
+			}
+			hr;
+			span { "Recipe:" }
+			@for (index, step) in meal_info.recipe.iter().enumerate() {
+				div class="grid grid-cols-[2.25rem,auto] w-full" {
+					span { (index + 1) "." }
+					p { (step.description) }
+				}
+			}
+		}
 	}
 }
 
 pub fn root(body: Markup) -> Markup {
 	html! {
 		head {
-			link href="/style.css" rel="stylesheet" {}
-			meta name="viewport" content="width=device-width, initial-scale=1.0" {}
+			link href="/style.css" rel="stylesheet";
+			meta name="viewport" content="width=device-width, initial-scale=1.0";
 		}
 		script src="https://unpkg.com/htmx.org@1.9.12" crossorigin="anonymous" {}
 		body {

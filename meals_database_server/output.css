@@ -1,5 +1,5 @@
 /*
-! tailwindcss v3.4.9 | MIT License | https://tailwindcss.com
+! tailwindcss v3.4.10 | MIT License | https://tailwindcss.com
 */
 
 /*
@@ -558,15 +558,6 @@ video {
   position: static;
 }
 
-.mx-auto {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.mt-6 {
-  margin-top: 1.5rem;
-}
-
 .flex {
   display: flex;
 }
@@ -587,8 +578,28 @@ video {
   grid-template-columns: 2.5rem auto 5rem;
 }
 
+.grid-cols-\[2rem\2c 1fr\2c 2fr\] {
+  grid-template-columns: 2rem 1fr 2fr;
+}
+
+.grid-cols-\[3rem\2c 1fr\2c 2fr\] {
+  grid-template-columns: 3rem 1fr 2fr;
+}
+
+.grid-cols-\[2\.25rem\2c 1fr\2c 2fr\] {
+  grid-template-columns: 2.25rem 1fr 2fr;
+}
+
+.grid-cols-\[2\.25rem\2c auto\] {
+  grid-template-columns: 2.25rem auto;
+}
+
 .flex-col {
   flex-direction: column;
+}
+
+.items-start {
+  align-items: flex-start;
 }
 
 .items-center {
@@ -609,6 +620,14 @@ video {
 
 .p-2 {
   padding: 0.5rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.p-3 {
+  padding: 0.75rem;
 }
 
 .px-4 {
@@ -654,6 +673,17 @@ input[type="checkbox"]:checked::before {
   border: solid #1B121F;
   border-width: 0 4px 4px 0;
   transform: translateX(-80%) rotate(45deg);
+}
+
+.meal {
+  background-color: #322238;
+}
+
+.meal hr {
+  height: 2px;
+  width: 100%;
+  background-color: #583C63;
+  border-color: #583C63;
 }
 
 body {

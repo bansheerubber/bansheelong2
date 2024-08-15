@@ -27,6 +27,6 @@ input[type="checkbox"]:checked::before {
 	width: 7px;
 	height: 15px;
 	border: solid #1B121F;
-  border-width: 0 4px 4px 0;
-  transform: translateX(-80%) rotate(45deg);
+	border-width: 0 4px 4px 0;
+	transform: translateX(-80%) rotate(45deg);
 }

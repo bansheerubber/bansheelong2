@@ -1,0 +1,10 @@
+.meal {
+	background-color: #322238;
+}
+
+.meal hr {
+	height: 2px;
+	width: 100%;
+	background-color: #583C63;
+	border-color: #583C63;
+}
