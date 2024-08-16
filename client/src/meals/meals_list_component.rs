@@ -79,7 +79,7 @@ impl MealsList {
 		let time = meal_stub.time;
 		let color = get_meal_color(meal_id_to_color, &meal_info.id);
 		if !self.opened_meals.contains(&(date, time)) {
-			return button(
+			return container(
 				row![
 					row![
 						if meal_stub.leftovers {
@@ -99,24 +99,28 @@ impl MealsList {
 					]
 					.align_y(Alignment::Center)
 					.spacing(5),
-					text!("{}", meal_info.name)
+					button(text!("{}", meal_info.name))
+						.on_press(MealsMessage::ToggleOpenMeal {
+							date,
+							id: meal_info.id,
+							time,
+						})
+						.padding([10, 0])
+						.style(|theme: &Theme, _status| button::Style {
+							background: Some(
+								theme.extended_palette().background.strong.color.into()
+							),
+							text_color: theme.palette().text,
+							border: Border::default(),
+							shadow: Shadow::default(),
+						})
 				]
 				.align_y(Alignment::Center)
 				.spacing(10)
 				.width(Length::Fill),
 			)
-			.on_press(MealsMessage::ToggleOpenMeal {
-				date,
-				id: meal_info.id,
-				time,
-			})
-			.padding(10)
-			.style(|theme: &Theme, _status| button::Style {
-				background: Some(theme.extended_palette().background.strong.color.into()),
-				text_color: theme.palette().text,
-				border: Border::default(),
-				shadow: Shadow::default(),
-			})
+			.padding([0, 10])
+			.style(|theme: &Theme| theme.extended_palette().background.strong.color.into())
 			.into();
 		}
 
