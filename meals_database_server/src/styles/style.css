@@ -1,6 +1,7 @@
 @import "tailwind.css";
 @import "components/shopping-list-item.css";
 @import "components/meal.css";
+@import "components/login.css";
 
 body {
 	background-color: #38263F;

@@ -1,0 +1,14 @@
+input[type="text"], input[type="password"] {
+	background-color: #583C63;
+	color: #FFDDF3;
+	padding: 0.25rem;
+}
+
+input[type="text"]::placeholder, input[type="password"]::placeholder {
+	color: #a37db3;
+}
+
+.submit-button {
+	background-color: #E059E0;
+	padding: 0.25rem;
+}
