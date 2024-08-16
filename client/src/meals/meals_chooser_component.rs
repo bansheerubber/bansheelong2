@@ -76,19 +76,20 @@ impl MealsChooser {
 
 	fn view_meal(&self, meal_info: &MealInfo) -> Element<MealsMessage> {
 		if !self.opened_meals.contains(&meal_info.id) {
-			return button(
-				row![text!("{}", meal_info.name)]
-					.spacing(10)
-					.width(Length::Fill),
+			return container(
+				button(row![text!("{}", meal_info.name)].spacing(10))
+					.on_press(MealsMessage::ToggleOpenMealInChooser { id: meal_info.id })
+					.padding([10, 0])
+					.style(|theme: &Theme, _status| button::Style {
+						background: Some(theme.extended_palette().background.strong.color.into()),
+						text_color: theme.palette().text,
+						border: Border::default(),
+						shadow: Shadow::default(),
+					}),
 			)
-			.on_press(MealsMessage::ToggleOpenMealInChooser { id: meal_info.id })
-			.padding(10)
-			.style(|theme: &Theme, _status| button::Style {
-				background: Some(theme.extended_palette().background.strong.color.into()),
-				text_color: theme.palette().text,
-				border: Border::default(),
-				shadow: Shadow::default(),
-			})
+			.width(Length::Fill)
+			.padding([0, 10])
+			.style(|theme: &Theme| theme.extended_palette().background.strong.color.into())
 			.into();
 		}
 
