@@ -45,6 +45,10 @@ pub enum MealsMessage {
 		date: NaiveDate,
 		time: Time,
 	},
+	CompletePlannedMeal {
+		date: NaiveDate,
+		time: Time,
+	},
 	DeletePlannedMeal {
 		date: NaiveDate,
 		time: Time,
@@ -153,6 +157,38 @@ impl Meals {
 	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
 			MealsMessage::AddMonth(_) => self.calendar.update(event),
+			MealsMessage::CompletePlannedMeal { date, time } => {
+				let mut meal_plan = self.meals_database.get_mut();
+				let vec = meal_plan.planned_meals.get_mut(&date).unwrap();
+				let meal_id = vec
+					.iter()
+					.find(|meal_stub| meal_stub.time == time)
+					.unwrap()
+					.id;
+
+				vec.retain(|meal_stub| meal_stub.time != time);
+
+				if vec.len() == 0 {
+					meal_plan.planned_meals.remove(&date);
+				}
+
+				meal_plan
+					.completed_meals
+					.entry(date)
+					.or_default()
+					.push(meal_id);
+
+				drop(meal_plan);
+
+				let meals_database = self.meals_database.clone();
+				Task::batch([
+					Task::future(async move {
+						meals_database.save().await;
+						Message::Noop
+					}),
+					Task::done(Message::Meals(MealsMessage::CloseOpenMeal { date, time })),
+				])
+			}
 			MealsMessage::DeletePlannedMeal { date, time } => {
 				let mut meal_plan = self.meals_database.get_mut();
 				let vec = meal_plan.planned_meals.get_mut(&date).unwrap();

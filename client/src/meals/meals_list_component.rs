@@ -135,6 +135,10 @@ impl MealsList {
 						.on_press(MealsMessage::DeletePlannedMeal { date, time })
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
+					button(text!("\u{e5ca}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::CompletePlannedMeal { date, time })
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
 					container(Space::new(0, 0)).width(Length::Fill),
 					button(text!("\u{e5cd}").font(ICONS).size(pt(30)))
 						.on_press(MealsMessage::ToggleOpenMeal {
@@ -147,6 +151,7 @@ impl MealsList {
 				]
 				.width(Length::Fill)
 				.padding(Padding::default().bottom(5))
+				.spacing(15)
 				.into(),
 			),
 		);

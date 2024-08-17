@@ -249,6 +249,8 @@ pub struct ShoppingListInfo {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MealPlan {
 	pub all_meals: HashMap<Uuid, MealInfo>,
+	#[serde(default)]
+	pub completed_meals: HashMap<NaiveDate, Vec<Uuid>>,
 	pub planned_meals: HashMap<NaiveDate, Vec<MealStub>>,
 	pub shopping_list: Vec<ShoppingListInfo>,
 }
