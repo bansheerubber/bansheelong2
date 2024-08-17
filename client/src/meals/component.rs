@@ -6,7 +6,7 @@ use iced::{
 	widget::{button, column, container, row, text},
 	Alignment, Element, Length, Task,
 };
-use meals_database::{MealPlan, MealPlanMessage, MealStub, RestDatabase, Time};
+use meals_database::{MealPlan, MealPlanMessage, MealStub, RestDatabase};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -236,7 +236,6 @@ impl Meals {
 						date,
 						id: meal_id,
 						leftovers: false,
-						time: Time::default(),
 					});
 
 				drop(meal_plan);

@@ -16,7 +16,6 @@ use crate::{
 	scrollable_menu::ScrollableMenu,
 	styles::{
 		green_button, invisible_button, keyboard_button, keyboard_button_focused, primary_button,
-		success_button,
 	},
 	Message, ICONS,
 };

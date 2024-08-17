@@ -190,30 +190,11 @@ pub struct MealInfo {
 }
 
 impl MealInfo {
-	pub fn new_stub(&self, date: NaiveDate, time: Time) -> MealStub {
+	pub fn new_stub(&self, date: NaiveDate) -> MealStub {
 		MealStub {
 			date,
 			id: self.id,
 			leftovers: false,
-			time,
-		}
-	}
-}
-
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum Time {
-	Breakfast = 0,
-	Lunch = 1,
-	#[default]
-	Dinner = 2,
-}
-
-impl Time {
-	pub fn as_usize(&self) -> usize {
-		match self {
-			Time::Breakfast => 0,
-			Time::Lunch => 1,
-			Time::Dinner => 2,
 		}
 	}
 }
@@ -223,7 +204,6 @@ pub struct MealStub {
 	pub date: NaiveDate,
 	pub id: Uuid,
 	pub leftovers: bool,
-	pub time: Time,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]

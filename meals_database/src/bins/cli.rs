@@ -1,4 +1,4 @@
-use meals_database::{Amount, Database, Ingredient, MealInfo, MealPlan, MealPlanMessage, RecipeStep, RestDatabase, Units};
+use meals_database::{Amount, Ingredient, MealInfo, MealPlan, MealPlanMessage, RecipeStep, RestDatabase, Units};
 use tokio::sync::mpsc::Receiver;
 use std::{io::Write, str::FromStr};
 use uuid::Uuid;
