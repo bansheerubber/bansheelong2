@@ -73,11 +73,11 @@ pub fn meal_contents<'a, 'b: 'a>(
 
 	let checkbox: Element<MealsMessage> = if let Some(meal_stub) = meal_stub {
 		let date = meal_stub.date.clone();
-		let time = meal_stub.time.clone();
+		let id = meal_stub.id.clone();
 		row![
 			text!("Leftovers:"),
 			checkbox("", meal_stub.leftovers)
-				.on_toggle(move |_toggled| MealsMessage::ToggleLeftovers { date, time })
+				.on_toggle(move |_toggled| MealsMessage::ToggleLeftovers { date, id })
 				.style(|_theme, status| checkbox_style(status))
 		]
 		.spacing(10)

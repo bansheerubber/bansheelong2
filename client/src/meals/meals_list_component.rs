@@ -3,7 +3,7 @@ use iced::{
 	widget::{button, column, container, image, row, text, Space},
 	Alignment, Border, Color, Element, Length, Padding, Shadow, Task, Theme,
 };
-use meals_database::{MealInfo, MealPlan, MealStub, RestDatabase, Time};
+use meals_database::{MealInfo, MealPlan, MealStub, RestDatabase};
 use std::{
 	collections::{HashMap, HashSet},
 	sync::Arc,
@@ -17,7 +17,7 @@ use super::{get_meal_color, meal_contents, MealsMessage};
 pub struct MealsList {
 	images: HashMap<String, image::Handle>,
 	meals_database: Arc<RestDatabase<MealPlan>>,
-	opened_meals: HashSet<(NaiveDate, Time)>,
+	opened_meals: HashSet<(NaiveDate, Uuid)>,
 	width: u16,
 }
 
@@ -40,8 +40,8 @@ impl MealsList {
 
 	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
-			MealsMessage::CloseOpenMeal { date, time } => {
-				self.opened_meals.remove(&(date, time));
+			MealsMessage::CloseOpenMeal { date, id } => {
+				self.opened_meals.remove(&(date, id));
 				Task::none()
 			}
 			MealsMessage::FailedImage { .. } => Task::none(),
@@ -49,13 +49,13 @@ impl MealsList {
 				self.images.insert(url, image::Handle::from_bytes(bytes));
 				Task::none()
 			}
-			MealsMessage::ToggleOpenMeal { date, id, time } => {
-				if self.opened_meals.contains(&(date, time)) {
-					self.opened_meals.remove(&(date, time));
+			MealsMessage::ToggleOpenMeal { date, id } => {
+				if self.opened_meals.contains(&(date, id)) {
+					self.opened_meals.remove(&(date, id));
 					Task::none()
 				} else {
 					let meal_plan = self.meals_database.get();
-					self.opened_meals.insert((date, time));
+					self.opened_meals.insert((date, id));
 					let url = meal_plan.all_meals.get(&id).unwrap().image.clone();
 
 					Task::done(Message::FetchImage { meal_id: id, url })
@@ -72,9 +72,9 @@ impl MealsList {
 		meal_stub: &MealStub,
 	) -> Element<MealsMessage> {
 		let date = meal_stub.date;
-		let time = meal_stub.time;
+		let id = meal_stub.id;
 		let color = get_meal_color(meal_id_to_color, &meal_info.id);
-		if !self.opened_meals.contains(&(date, time)) {
+		if !self.opened_meals.contains(&(date, id)) {
 			return container(
 				row![
 					row![
@@ -96,11 +96,7 @@ impl MealsList {
 					.align_y(Alignment::Center)
 					.spacing(5),
 					button(text!("{}", meal_info.name))
-						.on_press(MealsMessage::ToggleOpenMeal {
-							date,
-							id: meal_info.id,
-							time,
-						})
+						.on_press(MealsMessage::ToggleOpenMeal { date, id })
 						.padding([10, 0])
 						.style(|theme: &Theme, _status| button::Style {
 							background: Some(
@@ -127,7 +123,7 @@ impl MealsList {
 			Some(
 				row![
 					button(text("\u{e872}").font(ICONS).size(pt(30)))
-						.on_press(MealsMessage::DeletePlannedMeal { date, time })
+						.on_press(MealsMessage::DeletePlannedMeal { date, id })
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
 					button(text("\u{ef6e}").font(ICONS).size(pt(30)))
@@ -138,16 +134,12 @@ impl MealsList {
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
 					button(text("\u{e5ca}").font(ICONS).size(pt(30)))
-						.on_press(MealsMessage::CompletePlannedMeal { date, time })
+						.on_press(MealsMessage::CompletePlannedMeal { date, id })
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
 					container(Space::new(0, 0)).width(Length::Fill),
 					button(text("\u{e5cd}").font(ICONS).size(pt(30)))
-						.on_press(MealsMessage::ToggleOpenMeal {
-							date,
-							id: meal_info.id,
-							time
-						})
+						.on_press(MealsMessage::ToggleOpenMeal { date, id })
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
 				]

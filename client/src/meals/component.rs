@@ -43,15 +43,15 @@ pub enum MealsMessage {
 	AddMonth(isize),
 	CloseOpenMeal {
 		date: NaiveDate,
-		time: Time,
+		id: Uuid,
 	},
 	CompletePlannedMeal {
 		date: NaiveDate,
-		time: Time,
+		id: Uuid,
 	},
 	DeletePlannedMeal {
 		date: NaiveDate,
-		time: Time,
+		id: Uuid,
 	},
 	FailedImage {
 		url: String,
@@ -79,12 +79,11 @@ pub enum MealsMessage {
 	SearchMeal(String),
 	ToggleLeftovers {
 		date: NaiveDate,
-		time: Time,
+		id: Uuid,
 	},
 	ToggleOpenMeal {
 		date: NaiveDate,
 		id: Uuid,
-		time: Time,
 	},
 	ToggleOpenMealInChooser {
 		id: Uuid,
@@ -161,16 +160,12 @@ impl Meals {
 	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
 			MealsMessage::AddMonth(_) => self.calendar.update(event),
-			MealsMessage::CompletePlannedMeal { date, time } => {
+			MealsMessage::CompletePlannedMeal { date, id } => {
 				let mut meal_plan = self.meals_database.get_mut();
 				let vec = meal_plan.planned_meals.get_mut(&date).unwrap();
-				let meal_id = vec
-					.iter()
-					.find(|meal_stub| meal_stub.time == time)
-					.unwrap()
-					.id;
+				let meal_id = vec.iter().find(|meal_stub| meal_stub.id == id).unwrap().id;
 
-				vec.retain(|meal_stub| meal_stub.time != time);
+				vec.retain(|meal_stub| meal_stub.id != id);
 
 				if vec.len() == 0 {
 					meal_plan.planned_meals.remove(&date);
@@ -190,13 +185,13 @@ impl Meals {
 						meals_database.save().await;
 						Message::Noop
 					}),
-					Task::done(Message::Meals(MealsMessage::CloseOpenMeal { date, time })),
+					Task::done(Message::Meals(MealsMessage::CloseOpenMeal { date, id })),
 				])
 			}
-			MealsMessage::DeletePlannedMeal { date, time } => {
+			MealsMessage::DeletePlannedMeal { date, id } => {
 				let mut meal_plan = self.meals_database.get_mut();
 				let vec = meal_plan.planned_meals.get_mut(&date).unwrap();
-				vec.retain(|meal_stub| meal_stub.time != time);
+				vec.retain(|meal_stub| meal_stub.id != id);
 
 				if vec.len() == 0 {
 					meal_plan.planned_meals.remove(&date);
@@ -210,7 +205,7 @@ impl Meals {
 						meals_database.save().await;
 						Message::Noop
 					}),
-					Task::done(Message::Meals(MealsMessage::CloseOpenMeal { date, time })),
+					Task::done(Message::Meals(MealsMessage::CloseOpenMeal { date, id })),
 				])
 			}
 			MealsMessage::FailedImage { .. } | MealsMessage::Image { .. } => {
@@ -291,7 +286,7 @@ impl Meals {
 					_ => Task::none(),
 				}
 			}
-			MealsMessage::ToggleLeftovers { date, time } => {
+			MealsMessage::ToggleLeftovers { date, id } => {
 				let mut meal_plan = self.meals_database.get_mut();
 
 				let meal_stub = meal_plan
@@ -299,7 +294,7 @@ impl Meals {
 					.get_mut(&date)
 					.unwrap()
 					.iter_mut()
-					.find(|meal_stub| meal_stub.time == time)
+					.find(|meal_stub| meal_stub.id == id)
 					.unwrap();
 
 				meal_stub.leftovers = !meal_stub.leftovers;
@@ -345,7 +340,7 @@ impl Meals {
 								output
 									.send(Message::Meals(MealsMessage::CloseOpenMeal {
 										date: planned_meal.date,
-										time: planned_meal.time,
+										id: planned_meal.id,
 									}))
 									.await
 									.unwrap();
@@ -366,7 +361,7 @@ impl Meals {
 								output
 									.send(Message::Meals(MealsMessage::CloseOpenMeal {
 										date: *date,
-										time: planned_meal1.time,
+										id: planned_meal1.id,
 									}))
 									.await
 									.unwrap();
