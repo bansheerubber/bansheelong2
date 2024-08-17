@@ -40,6 +40,7 @@ pub fn meal_contents<'a, 'b: 'a>(
 	meal_info: &'a MealInfo,
 	image_handle: Option<&'a image::Handle>,
 	meal_stub: Option<&'a MealStub>,
+	header: Option<Element<'b, MealsMessage>>,
 ) -> Column<'b, MealsMessage> {
 	let image = if let Some(handle) = image_handle {
 		container(image(handle.clone()))
@@ -85,27 +86,33 @@ pub fn meal_contents<'a, 'b: 'a>(
 		Space::new(0, 0).into()
 	};
 
-	column![
-		image,
-		text(meal_info.name.clone()),
-		text!("Serves {}", meal_info.serving_size),
-		checkbox,
-		container(
-			container(text!(""))
-				.style(|theme: &Theme| theme.extended_palette().background.weak.color.into())
-				.width(Length::Fill)
-				.height(2),
+	let mut column = column(vec![]);
+	column = column
+		.push_maybe(header)
+		.push(image)
+		.push(text(meal_info.name.clone()))
+		.push(text!("Serves {}", meal_info.serving_size))
+		.push(checkbox)
+		.push(
+			container(
+				container(text!(""))
+					.style(|theme: &Theme| theme.extended_palette().background.weak.color.into())
+					.width(Length::Fill)
+					.height(2),
+			)
+			.padding([5, 0]),
 		)
-		.padding([5, 0]),
-		ingredients,
-		container(
-			container(text!(""))
-				.style(|theme: &Theme| theme.extended_palette().background.weak.color.into())
-				.width(Length::Fill)
-				.height(2),
+		.push(ingredients)
+		.push(
+			container(
+				container(text!(""))
+					.style(|theme: &Theme| theme.extended_palette().background.weak.color.into())
+					.width(Length::Fill)
+					.height(2),
+			)
+			.padding([5, 0]),
 		)
-		.padding([5, 0]),
-		recipe,
-	]
-	.spacing(6)
+		.push(recipe);
+
+	return column.into();
 }

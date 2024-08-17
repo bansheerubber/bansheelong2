@@ -11,9 +11,10 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
-	styles::{danger_button, primary_button},
+	pt,
+	styles::{danger_button, invisible_button, primary_button},
 	widgets::circle,
-	Message,
+	Message, ICONS,
 };
 
 use super::{get_meal_color, meal_contents, MealsMessage};
@@ -124,27 +125,30 @@ impl MealsList {
 			.into();
 		}
 
-		let mut meal_contents = meal_contents(
+		let meal_contents = meal_contents(
 			meal_info,
 			self.images.get(&meal_info.image),
 			Some(meal_stub),
-		);
-		meal_contents = meal_contents.push(
-			row![
-				button(text!("Delete"))
-					.on_press(MealsMessage::DeletePlannedMeal { date, time })
-					.style(|theme, _status| danger_button(theme)),
-				container(text!("")).width(Length::Fill),
-				button(text!("Close"))
-					.on_press(MealsMessage::ToggleOpenMeal {
-						date,
-						id: meal_info.id,
-						time
-					})
-					.style(|theme, _status| primary_button(theme)),
-			]
-			.width(Length::Fill)
-			.padding(Padding::default().top(5)),
+			Some(
+				row![
+					button(text!("\u{e872}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::DeletePlannedMeal { date, time })
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
+					container(Space::new(0, 0)).width(Length::Fill),
+					button(text!("\u{e5cd}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::ToggleOpenMeal {
+							date,
+							id: meal_info.id,
+							time
+						})
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
+				]
+				.width(Length::Fill)
+				.padding(Padding::default().bottom(5))
+				.into(),
+			),
 		);
 
 		container(meal_contents)

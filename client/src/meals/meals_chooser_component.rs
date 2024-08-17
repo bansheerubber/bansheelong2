@@ -15,7 +15,8 @@ use crate::{
 	pt,
 	scrollable_menu::ScrollableMenu,
 	styles::{
-		green_button, keyboard_button, keyboard_button_focused, primary_button, success_button,
+		green_button, invisible_button, keyboard_button, keyboard_button_focused, primary_button,
+		success_button,
 	},
 	Message, ICONS,
 };
@@ -104,11 +105,9 @@ impl MealsChooser {
 			.padding(2)
 			.width(30)
 			.height(30)
-			.style(|theme, status| {
-				match status {
-					button::Status::Pressed => keyboard_button_focused(theme),
-					_ => keyboard_button(theme),
-				}
+			.style(|theme, status| match status {
+				button::Status::Pressed => keyboard_button_focused(theme),
+				_ => keyboard_button(theme),
 			})
 			.into()
 	}
@@ -132,23 +131,30 @@ impl MealsChooser {
 			.into();
 		}
 
-		let mut meal_contents = meal_contents(meal_info, self.images.get(&meal_info.image), None);
-		meal_contents = meal_contents.push(
-			row![
-				button(text!("Close"))
-					.on_press(MealsMessage::ToggleOpenMealInChooser { id: meal_info.id })
-					.style(|theme, _status| primary_button(theme)),
-				container(text!("")).width(Length::Fill),
-				button(text!("Choose"))
-					.on_press(MealsMessage::SelectMealForDate {
-						date: self.current_date,
-						id: meal_info.id,
-					})
-					.style(|theme, _status| success_button(theme))
-			]
-			.spacing(25)
-			.width(Length::Fill)
-			.padding(Padding::default().top(5)),
+		let meal_contents = meal_contents(
+			meal_info,
+			self.images.get(&meal_info.image),
+			None,
+			Some(
+				row![
+					button(text!("\u{e145}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::SelectMealForDate {
+							date: self.current_date,
+							id: meal_info.id,
+						})
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
+					container(Space::new(0, 0)).width(Length::Fill),
+					button(text!("\u{e5cd}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::ToggleOpenMealInChooser { id: meal_info.id })
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
+				]
+				.spacing(25)
+				.width(Length::Fill)
+				.padding(Padding::default().bottom(3))
+				.into(),
+			),
 		);
 
 		container(meal_contents)
