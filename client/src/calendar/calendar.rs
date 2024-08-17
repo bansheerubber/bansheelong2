@@ -1,7 +1,8 @@
 use chrono::{Datelike, Days, Local, Months, NaiveDate, Weekday};
 use iced::{
+	color,
 	widget::{button, column, container, row, text, Space},
-	Alignment, Border, Element, Length, Shadow, Task, Theme,
+	Alignment, Border, Element, Length, Padding, Shadow, Task, Theme,
 };
 use meals_database::{MealPlan, RestDatabase};
 use std::{collections::HashMap, sync::Arc};
@@ -91,6 +92,7 @@ impl Calendar {
 			let mut week = row(vec![]).spacing(DAY_SPACING);
 			for _ in 0..7 {
 				let meals = meal_plan.planned_meals.get(&iter);
+				let completed_meals = meal_plan.completed_meals.get(&iter);
 
 				let mut bubbles = row![]
 					.spacing(4)
@@ -108,12 +110,32 @@ impl Calendar {
 							)
 							.width(6)
 							.align_x(Alignment::Center)
+							.padding(Padding::default().bottom(5))
 						} else {
 							container(circle(
 								get_meal_color(&mut meal_id_to_color, &meal_stub.id),
 								3.0,
 							))
+							.padding(Padding::default().bottom(5))
 						});
+					}
+				}
+
+				if let Some(completed_meals) = completed_meals {
+					for _ in completed_meals.iter() {
+						bubbles = bubbles.push(
+							container(
+								text("\u{e5ca}")
+									.font(ICONS)
+									.size(pt(15))
+									.color(color!(0xAB6CC4)), // #AB6CC4
+							)
+							.align_y(Alignment::End)
+							/*.style(|theme: &Theme| {
+								theme.extended_palette().primary.base.color.into()
+							})*/
+							.height(Length::Fill),
+						);
 					}
 				}
 
@@ -131,7 +153,7 @@ impl Calendar {
 						)
 						.width(DAY_SIZE)
 						.height(DAY_SIZE)
-						.padding(5)
+						.padding(Padding::default().top(5).left(5).right(5))
 						.style(|theme: &Theme| {
 							theme.extended_palette().background.strong.color.into()
 						}),
