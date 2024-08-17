@@ -14,7 +14,9 @@ use uuid::Uuid;
 use crate::{
 	pt,
 	scrollable_menu::ScrollableMenu,
-	styles::{green_button, keyboard_button, primary_button, success_button},
+	styles::{
+		green_button, keyboard_button, keyboard_button_focused, primary_button, success_button,
+	},
 	Message, ICONS,
 };
 
@@ -102,7 +104,12 @@ impl MealsChooser {
 			.padding(2)
 			.width(30)
 			.height(30)
-			.style(|theme, _style| keyboard_button(theme))
+			.style(|theme, status| {
+				match status {
+					button::Status::Pressed => keyboard_button_focused(theme),
+					_ => keyboard_button(theme),
+				}
+			})
 			.into()
 	}
 
@@ -174,7 +181,7 @@ impl MealsChooser {
 		})
 		.padding(Padding::default().top(10).left(10).right(10).bottom(5))
 		.width(Length::Fill)
-		.style(|theme, _style| keyboard_button(theme))]
+		.style(|theme, _status| keyboard_button(theme))]
 		.spacing(10);
 
 		let meal_plan = self.meals_database.get();

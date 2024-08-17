@@ -58,6 +58,15 @@ pub fn keyboard_button(theme: &Theme) -> button::Style {
 	}
 }
 
+pub fn keyboard_button_focused(theme: &Theme) -> button::Style {
+	button::Style {
+		background: Some(theme.extended_palette().primary.weak.color.into()),
+		text_color: theme.palette().text,
+		border: Border::default(),
+		shadow: Shadow::default(),
+	}
+}
+
 pub fn invisible_button(theme: &Theme) -> button::Style {
 	button::Style {
 		background: None,
