@@ -303,4 +303,30 @@ impl MealPlan {
 			None
 		}
 	}
+
+	pub fn generate_shopping_list_for_meal(&self, date: NaiveDate, id: Uuid) -> ShoppingListInfo {
+		let meal_stub = self
+			.planned_meals
+			.get(&date)
+			.unwrap()
+			.iter()
+			.find(|meal_stub| meal_stub.id == id)
+			.unwrap()
+			.clone();
+
+		let meal = self.all_meals.get(&id).unwrap();
+		let mut items = vec![];
+		for ingredient in meal.ingredients.iter() {
+			items.push(ShoppingListItem {
+				amount: ingredient.amount.clone(),
+				have: false,
+				name: ingredient.name.clone(),
+			});
+		}
+
+		ShoppingListInfo {
+			items,
+			for_meals: vec![meal_stub],
+		}
+	}
 }

@@ -86,6 +86,18 @@ impl ShoppingList {
 					Message::Noop
 				})
 			}
+			MealsMessage::GenerateShoppingListForMeal { date, id } => {
+				let mut meal_plan = self.meals_database.get_mut();
+				let shopping_list = meal_plan.generate_shopping_list_for_meal(date, id);
+				meal_plan.shopping_list.push(shopping_list);
+				drop(meal_plan);
+
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
+			}
 			MealsMessage::PruneShoppingList {
 				shopping_list_index,
 			} => {

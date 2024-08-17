@@ -10,12 +10,7 @@ use std::{
 };
 use uuid::Uuid;
 
-use crate::{
-	pt,
-	styles::{danger_button, invisible_button, primary_button},
-	widgets::circle,
-	Message, ICONS,
-};
+use crate::{pt, styles::invisible_button, widgets::circle, Message, ICONS};
 
 use super::{get_meal_color, meal_contents, MealsMessage};
 
@@ -131,16 +126,23 @@ impl MealsList {
 			Some(meal_stub),
 			Some(
 				row![
-					button(text!("\u{e872}").font(ICONS).size(pt(30)))
+					button(text("\u{e872}").font(ICONS).size(pt(30)))
 						.on_press(MealsMessage::DeletePlannedMeal { date, time })
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
-					button(text!("\u{e5ca}").font(ICONS).size(pt(30)))
+					button(text("\u{ef6e}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::GenerateShoppingListForMeal {
+							date,
+							id: meal_info.id
+						})
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
+					button(text("\u{e5ca}").font(ICONS).size(pt(30)))
 						.on_press(MealsMessage::CompletePlannedMeal { date, time })
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
 					container(Space::new(0, 0)).width(Length::Fill),
-					button(text!("\u{e5cd}").font(ICONS).size(pt(30)))
+					button(text("\u{e5cd}").font(ICONS).size(pt(30)))
 						.on_press(MealsMessage::ToggleOpenMeal {
 							date,
 							id: meal_info.id,

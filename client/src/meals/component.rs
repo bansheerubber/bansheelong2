@@ -57,6 +57,10 @@ pub enum MealsMessage {
 		url: String,
 	},
 	GenerateShoppingList,
+	GenerateShoppingListForMeal {
+		date: NaiveDate,
+		id: Uuid,
+	},
 	Image {
 		bytes: Bytes,
 		url: String,
@@ -316,6 +320,7 @@ impl Meals {
 			| MealsMessage::SearchMeal(..) => self.meals_chooser.update(event),
 			MealsMessage::ToggleShoppingListItem { .. }
 			| MealsMessage::GenerateShoppingList
+			| MealsMessage::GenerateShoppingListForMeal { .. }
 			| MealsMessage::PruneShoppingList { .. } => self.shopping_list.update(event),
 			MealsMessage::Updated => {
 				let meals_database = self.meals_database.clone();
