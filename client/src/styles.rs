@@ -1,5 +1,7 @@
 use iced::{
-	border, color, widget::{button, checkbox}, Border, Shadow, Theme
+	border, color,
+	widget::{button, checkbox},
+	Border, Shadow, Theme,
 };
 
 pub fn primary_button(theme: &Theme) -> button::Style {
@@ -42,6 +44,15 @@ pub fn danger_button(theme: &Theme) -> button::Style {
 	button::Style {
 		background: Some(theme.palette().danger.into()),
 		text_color: color!(0x111111),
+		border: Border::default(),
+		shadow: Shadow::default(),
+	}
+}
+
+pub fn keyboard_button(theme: &Theme) -> button::Style {
+	button::Style {
+		background: Some(theme.extended_palette().background.strong.color.into()),
+		text_color: theme.palette().text,
 		border: Border::default(),
 		shadow: Shadow::default(),
 	}

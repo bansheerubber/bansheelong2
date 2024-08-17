@@ -23,6 +23,7 @@ use super::{shopping_list_component::ShoppingList, MealsChooser, MealsList, Rand
 pub enum CalendarState {
 	Calendar,
 	Chooser { date: NaiveDate },
+	ChooserSearch { date: NaiveDate },
 	RandomChooser { date: NaiveDate },
 }
 
@@ -61,12 +62,13 @@ pub enum MealsMessage {
 	},
 	RandomizeMeal,
 	ResetChooser,
+	Scrollable(ScrollableMenuMessage),
 	SetCalendarState(CalendarState),
 	SelectMealForDate {
 		date: NaiveDate,
 		id: Uuid,
 	},
-	Scrollable(ScrollableMenuMessage),
+	SearchMeal(String),
 	ToggleLeftovers {
 		date: NaiveDate,
 		time: Time,
@@ -268,9 +270,9 @@ impl Meals {
 			MealsMessage::ToggleOpenMeal { .. } | MealsMessage::CloseOpenMeal { .. } => {
 				self.meals_list.update(event)
 			}
-			MealsMessage::ToggleOpenMealInChooser { .. } | MealsMessage::ResetChooser => {
-				self.meals_chooser.update(event)
-			}
+			MealsMessage::ToggleOpenMealInChooser { .. }
+			| MealsMessage::ResetChooser
+			| MealsMessage::SearchMeal(..) => self.meals_chooser.update(event),
 			MealsMessage::ToggleShoppingListItem { .. }
 			| MealsMessage::GenerateShoppingList
 			| MealsMessage::PruneShoppingList { .. } => self.shopping_list.update(event),
@@ -294,10 +296,13 @@ impl Meals {
 					for (date, planned_meals1) in old_meals.iter() {
 						let Some(planned_meals2) = meal_plan.planned_meals.get(&date) else {
 							for planned_meal in planned_meals1 {
-								output.send(Message::Meals(MealsMessage::CloseOpenMeal {
-									date: planned_meal.date,
-									time: planned_meal.time,
-								})).await.unwrap();
+								output
+									.send(Message::Meals(MealsMessage::CloseOpenMeal {
+										date: planned_meal.date,
+										time: planned_meal.time,
+									}))
+									.await
+									.unwrap();
 							}
 
 							continue;
@@ -312,10 +317,13 @@ impl Meals {
 							}
 
 							if !found {
-								output.send(Message::Meals(MealsMessage::CloseOpenMeal {
-									date: *date,
-									time: planned_meal1.time,
-								})).await.unwrap();
+								output
+									.send(Message::Meals(MealsMessage::CloseOpenMeal {
+										date: *date,
+										time: planned_meal1.time,
+									}))
+									.await
+									.unwrap();
 							}
 						}
 					}
@@ -341,6 +349,11 @@ impl Meals {
 
 		column = column.push(self.meals_list.view());
 
+		let width = match self.calendar_state {
+			CalendarState::ChooserSearch { .. } => 344,
+			_ => 400,
+		};
+
 		row!(
 			container(self.meals_list_menu.view(
 				column.into(),
@@ -355,15 +368,16 @@ impl Meals {
 					.into()],
 				min_height.saturating_sub(10),
 			))
-			.width(400)
+			.width(width)
 			.height(Length::Fill),
 			match self.calendar_state {
 				CalendarState::Calendar => self.calendar.view(),
-				CalendarState::Chooser { .. } => self.meals_chooser.view(),
+				CalendarState::Chooser { .. } => self.meals_chooser.view(false),
+				CalendarState::ChooserSearch { .. } => self.meals_chooser.view(true),
 				CalendarState::RandomChooser { .. } => self.random_meal_chooser.view(),
 			}
 		)
-		.spacing(720 - self.calendar.width() - self.meals_list.width())
+		.spacing(16)
 		.align_y(Alignment::Center)
 		.width(720)
 		.into()
