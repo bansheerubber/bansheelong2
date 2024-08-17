@@ -218,10 +218,15 @@ impl Meals {
 				])
 			}
 			MealsMessage::SetCalendarState(state) => {
+				let old_state = self.calendar_state.clone();
 				self.calendar_state = state;
 
 				match &self.calendar_state {
 					CalendarState::Chooser { date } => {
+						if let CalendarState::ChooserSearch { .. } = old_state {
+							return Task::none();
+						};
+
 						self.meals_chooser.set_current_date(date.clone());
 						Task::batch([
 							Task::done(Message::Meals(MealsMessage::Scrollable(
