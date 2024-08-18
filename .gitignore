@@ -3,3 +3,4 @@
 meals-database.json
 .env.local
 password
+auth-token

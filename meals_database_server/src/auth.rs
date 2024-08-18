@@ -48,3 +48,29 @@ impl<'r> FromRequest<'r> for User {
 		}
 	}
 }
+
+pub struct RestUser;
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for RestUser {
+	type Error = Error;
+
+	async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Error> {
+		let Some(token) = request.headers().get_one("authorization") else {
+			let error = Error::AuthenticationError {
+				message: "Invalid auth token".into(),
+			};
+			return Outcome::Error((error.get_status_code(), error));
+		};
+
+		let expected_token = std::fs::read_to_string("./auth-token").unwrap();
+		if token == expected_token.trim() {
+			Outcome::Success(RestUser)
+		} else {
+			let error = Error::AuthenticationError {
+				message: "Invalid auth token".into(),
+			};
+			return Outcome::Error((error.get_status_code(), error));
+		}
+	}
+}

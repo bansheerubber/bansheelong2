@@ -1,6 +1,8 @@
-use meals_database::{Amount, Ingredient, MealInfo, MealPlan, MealPlanMessage, RecipeStep, RestDatabase, Units};
-use tokio::sync::mpsc::Receiver;
+use meals_database::{
+	Amount, Ingredient, MealInfo, MealPlan, MealPlanMessage, RecipeStep, RestDatabase, Units,
+};
 use std::{io::Write, str::FromStr};
+use tokio::sync::mpsc::Receiver;
 use uuid::Uuid;
 
 #[tokio::main]
@@ -27,13 +29,12 @@ async fn main() {
 		}
 	}*/
 
-	let (database, _): (RestDatabase<MealPlan>, Receiver<MealPlanMessage>) =
-		RestDatabase::new(
-			"http://bansheestorage-alt:8001/rest/meals/all",
-			"http://bansheestorage-alt:8001/rest/meals/replace",
-			"ws://bansheestorage-alt:8001/ws/meals-events",
-		)
-		.await;
+	let (database, _): (RestDatabase<MealPlan>, Receiver<MealPlanMessage>) = RestDatabase::new(
+		"http://bansheestorage-alt:8001/rest/meals/all",
+		"http://bansheestorage-alt:8001/rest/meals/replace",
+		"ws://bansheestorage-alt:8001/ws/meals-events",
+	)
+	.await;
 
 	database.load().await;
 

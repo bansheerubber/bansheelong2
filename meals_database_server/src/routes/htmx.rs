@@ -137,7 +137,7 @@ pub async fn post_login(
 	cookies: &CookieJar<'_>,
 ) -> Redirect {
 	let password = std::fs::read_to_string("password").unwrap();
-	if login.username != "me" && login.password != password {
+	if login.username != "me" || login.password != password.trim() {
 		return Redirect::to("/login");
 	}
 

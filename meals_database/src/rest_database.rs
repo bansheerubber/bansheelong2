@@ -143,6 +143,13 @@ where
 			.body(json!(&*data).to_string())
 			.header(header::CONTENT_TYPE, "application/json")
 			.header(header::ACCEPT, "application/json")
+			.header(
+				header::AUTHORIZATION,
+				format!(
+					"Bearer {}",
+					std::fs::read_to_string("./auth-token").unwrap().trim()
+				),
+			)
 			.send()
 			.await
 			.unwrap();
@@ -153,6 +160,13 @@ where
 		let response = client
 			.get(&self.get_all_url)
 			.header(header::ACCEPT, "application/json")
+			.header(
+				header::AUTHORIZATION,
+				format!(
+					"Bearer {}",
+					std::fs::read_to_string("./auth-token").unwrap().trim()
+				),
+			)
 			.send()
 			.await
 			.unwrap()
