@@ -1,14 +1,12 @@
 use futures::{SinkExt, Stream};
 use iced::stream;
+use storage_server::JobStatusFlags;
 use tokio::{
 	net::TcpStream,
 	time::{sleep, Duration},
 };
 
-use super::{
-	component::{JobStatusFlags, StorageData},
-	StorageMessage,
-};
+use super::{component::StorageData, StorageMessage};
 
 enum SocketState {
 	Connected(TcpStream, String),
@@ -93,9 +91,6 @@ pub fn socket() -> impl Stream<Item = StorageMessage> {
 								btrfs_used_size: parts[3],
 								btrfs_total_size: parts[4],
 								btrfs_backup_count: parts[5],
-
-								dailies: parts[6] as u8,
-								weeklies: parts[7] as u8,
 							},
 						})
 						.await;
@@ -105,7 +100,7 @@ pub fn socket() -> impl Stream<Item = StorageMessage> {
 					}
 				}
 				SocketState::Disconnected => {
-					match TcpStream::connect("bansheestorage:3002").await {
+					match TcpStream::connect("bansheestorage:3003").await {
 						Ok(socket) => {
 							state = SocketState::Connected(socket, String::new());
 						}

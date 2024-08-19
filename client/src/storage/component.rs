@@ -1,10 +1,10 @@
-use bitflags::bitflags;
 use std::ops::Add;
 
 use iced::{
 	widget::{column, container, row, text, Space},
 	Element, Length, Padding, Task, Theme,
 };
+use storage_server::JobStatusFlags;
 
 use crate::Message;
 
@@ -13,36 +13,14 @@ pub enum StorageMessage {
 	Update { data: StorageData },
 }
 
-bitflags! {
-	#[derive(Clone, Debug, Default)]
-	pub struct JobStatusFlags: u64 {
-		const IDLE                           = 0;
-		const GENERAL_ERROR	                 = 1 << 0;
-		const DOWNLOADING_DAILY              = 1 << 1;
-		const CREATING_WEEKLY                = 1 << 2;
-		const CREATING_MONTHLY               = 1 << 3;
-		const SYNCING_GITHUB                 = 1 << 4;
-		const REMOVING_DAILY                 = 1 << 5;
-		const REMOVING_WEEKLY                = 1 << 6;
-		const ZPOOL_ERROR                    = 1 << 7;
-		const ZPOOL_HARD_DRIVE_PARSE_ERROR   = 1 << 8;
-		const ZPOOL_HARD_DRIVE_RW_ERROR      = 1 << 9;
-		const ZPOOL_HARD_DRIVE_STATE_ERROR   = 1 << 10;
-		const ZPOOL_SCRUBBING                = 1 << 11;
-		const WRITING_BTRBK                  = 1 << 12;
-	}
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct StorageData {
 	pub btrfs_backup_count: u64,
 	pub btrfs_total_size: u64,
 	pub btrfs_used_size: u64,
-	pub dailies: u8,
 	pub job_flags: JobStatusFlags,
 	pub total_size: u64,
 	pub used_size: u64,
-	pub weeklies: u8,
 }
 
 pub struct Storage {
@@ -80,25 +58,10 @@ impl Storage {
 
 		if data.job_flags.contains(JobStatusFlags::GENERAL_ERROR) {
 			String::from("Error")
-		} else if data.job_flags.contains(JobStatusFlags::CREATING_MONTHLY) {
-			String::from("Creating monthly backup") + &ellipses
-		} else if data.job_flags.contains(JobStatusFlags::CREATING_WEEKLY) {
-			String::from("Creating weekly backup") + &ellipses
-		} else if data.job_flags.contains(JobStatusFlags::DOWNLOADING_DAILY) {
-			String::from("Downloading daily backup") + &ellipses
 		} else if data.job_flags.contains(JobStatusFlags::SYNCING_GITHUB) {
 			String::from("Syncing GitHub to backup") + &ellipses
-		} else if data.job_flags.contains(JobStatusFlags::REMOVING_DAILY) {
-			String::from("Removing stale daily") + &ellipses
-		} else if data.job_flags.contains(JobStatusFlags::REMOVING_WEEKLY) {
-			String::from("Removing stale weekly") + &ellipses
 		} else if data.job_flags.contains(JobStatusFlags::ZPOOL_ERROR) {
 			String::from("ZPool error")
-		} else if data
-			.job_flags
-			.contains(JobStatusFlags::ZPOOL_HARD_DRIVE_PARSE_ERROR)
-		{
-			String::from("Hard drive parse error")
 		} else if data
 			.job_flags
 			.contains(JobStatusFlags::ZPOOL_HARD_DRIVE_RW_ERROR)

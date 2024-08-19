@@ -1,0 +1,15 @@
+[package]
+name = "storage_server"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "storage_server_cli"
+path = "src/bins/server.rs"
+
+[dependencies]
+anyhow = "1.0.86"
+bitflags = "2.6.0"
+futures = "0.3.30"
+thiserror = "1.0"
+tokio = { version = "1.0", features = ["full"] }

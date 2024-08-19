@@ -678,6 +678,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "storage_server",
  "tokio",
  "uuid",
 ]
@@ -4397,6 +4398,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "storage_server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bitflags 2.6.0",
+ "futures",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "strict-num"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4653,6 +4665,7 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
+ "parking_lot 0.12.3",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
