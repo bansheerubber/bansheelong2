@@ -85,6 +85,15 @@ impl Calendar {
 		let mut meal_id_to_color = HashMap::new();
 
 		let meal_plan = self.meals_database.get();
+
+		for planned_meals in meal_plan.planned_meals.values() {
+			for planned_meal in planned_meals.iter() {
+				if planned_meal.date.lt(&self.start) {
+					get_meal_color(&mut meal_id_to_color, &planned_meal.id);
+				}
+			}
+		}
+
 		let mut days = column(vec![]).spacing(DAY_SPACING);
 		while (iter.month() <= self.start.month() && iter.year() == self.start.year())
 			|| iter.year() < self.start.year()
@@ -131,9 +140,6 @@ impl Calendar {
 									.color(color!(0xAB6CC4)), // #AB6CC4
 							)
 							.align_y(Alignment::End)
-							/*.style(|theme: &Theme| {
-								theme.extended_palette().primary.base.color.into()
-							})*/
 							.height(Length::Fill),
 						);
 					}
