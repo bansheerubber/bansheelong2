@@ -133,6 +133,10 @@ impl MealsList {
 						})
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
+					button(text("\u{e089}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::AddLeftoversForMeal { date, id })
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
 					button(text("\u{e5ca}").font(ICONS).size(pt(30)))
 						.on_press(MealsMessage::CompletePlannedMeal { date, id })
 						.style(|theme, _status| invisible_button(theme))

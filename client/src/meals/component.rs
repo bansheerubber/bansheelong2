@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use chrono::NaiveDate;
+use chrono::{Days, NaiveDate};
 use futures::{executor::block_on, select, FutureExt, SinkExt};
 use iced::{
 	stream,
@@ -7,13 +7,13 @@ use iced::{
 	Alignment, Element, Length, Task,
 };
 use meals_database::{MealPlan, MealPlanMessage, MealStub, RestDatabase};
-use std::sync::Arc;
+use std::{borrow::Borrow, sync::Arc};
 use uuid::Uuid;
 
 use crate::{
 	calendar::Calendar,
 	scrollable_menu::{ScrollableMenu, ScrollableMenuMessage},
-	styles::primary_button,
+	styles::{primary_button, subdued_button},
 	Message,
 };
 
@@ -40,6 +40,10 @@ pub struct Meals {
 
 #[derive(Clone, Debug)]
 pub enum MealsMessage {
+	AddLeftoversForMeal {
+		date: NaiveDate,
+		id: Uuid,
+	},
 	AddMonth(isize),
 	CloseOpenMeal {
 		date: NaiveDate,
@@ -65,6 +69,8 @@ pub enum MealsMessage {
 		bytes: Bytes,
 		url: String,
 	},
+	MoveMealsBackward,
+	MoveMealsForward,
 	PruneShoppingList {
 		shopping_list_index: usize,
 	},
@@ -159,6 +165,29 @@ impl Meals {
 
 	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
+			MealsMessage::AddLeftoversForMeal { date, id } => {
+				let mut meal_plan = self.meals_database.get_mut();
+
+				let date = date.checked_add_days(Days::new(1)).unwrap();
+
+				meal_plan
+					.planned_meals
+					.entry(date)
+					.or_default()
+					.push(MealStub {
+						date,
+						id,
+						leftovers: true,
+					});
+
+				drop(meal_plan);
+
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
+			}
 			MealsMessage::AddMonth(_) => self.calendar.update(event),
 			MealsMessage::CompletePlannedMeal { date, id } => {
 				let mut meal_plan = self.meals_database.get_mut();
@@ -213,6 +242,47 @@ impl Meals {
 				self.meals_chooser.update(event.clone());
 				self.random_meal_chooser.update(event);
 				Task::none()
+			}
+			MealsMessage::MoveMealsBackward | MealsMessage::MoveMealsForward => {
+				let mut meal_plan = self.meals_database.get_mut();
+
+				let mut new_meals = vec![];
+
+				for planned_meals in meal_plan.planned_meals.values() {
+					for planned_meal in planned_meals.iter() {
+						let mut date = planned_meal.date;
+
+						if let MealsMessage::MoveMealsBackward = event {
+							date = date.checked_sub_days(Days::new(1)).unwrap();
+						} else {
+							date = date.checked_add_days(Days::new(1)).unwrap();
+						}
+
+						new_meals.push(MealStub {
+							date,
+							id: planned_meal.id,
+							leftovers: planned_meal.leftovers,
+						});
+					}
+				}
+
+				meal_plan.planned_meals.clear();
+
+				for new_meal in new_meals {
+					meal_plan
+						.planned_meals
+						.entry(new_meal.date)
+						.or_default()
+						.push(new_meal);
+				}
+
+				drop(meal_plan);
+
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
 			}
 			MealsMessage::RandomizeMeal => self.random_meal_chooser.update(event),
 			MealsMessage::Scrollable(ref message) => {
@@ -397,7 +467,26 @@ impl Meals {
 		row!(
 			container(self.meals_list_menu.view(
 				column.into(),
-				vec![button(
+				vec![
+					button(
+						container(text!("Move meals backward"))
+							.align_x(Alignment::Center)
+							.width(Length::Fill),
+					)
+					.on_press(MealsMessage::MoveMealsBackward)
+					.width(Length::Fill)
+					.style(|theme, _status| subdued_button(theme))
+					.into(),
+					button(
+						container(text!("Move meals forward"))
+							.align_x(Alignment::Center)
+							.width(Length::Fill),
+					)
+					.on_press(MealsMessage::MoveMealsForward)
+					.width(Length::Fill)
+					.style(|theme, _status| subdued_button(theme))
+					.into(),
+					button(
 						container(text!("Generate shopping list"))
 							.align_x(Alignment::Center)
 							.width(Length::Fill),
@@ -405,7 +494,8 @@ impl Meals {
 					.on_press(MealsMessage::GenerateShoppingList)
 					.width(Length::Fill)
 					.style(|theme, _status| primary_button(theme))
-					.into()],
+					.into()
+				],
 				min_height.saturating_sub(10),
 			))
 			.width(width)
