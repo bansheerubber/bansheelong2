@@ -158,7 +158,7 @@ impl MealsChooser {
 
 		container(meal_contents)
 			.width(Length::Fill)
-			.padding(10)
+			.padding(Padding::default().top(7).bottom(10).left(10).right(10))
 			.style(|theme: &Theme| theme.extended_palette().background.strong.color.into())
 			.into()
 	}

@@ -34,10 +34,6 @@ impl MealsList {
 		)
 	}
 
-	pub fn width(&self) -> u16 {
-		self.width
-	}
-
 	pub fn update(&mut self, event: MealsMessage) -> Task<Message> {
 		match event {
 			MealsMessage::CloseOpenMeal { date, id } => {
@@ -156,7 +152,7 @@ impl MealsList {
 
 		container(meal_contents)
 			.width(Length::Fill)
-			.padding(10)
+			.padding(Padding::default().top(7).bottom(10).left(10).right(10))
 			.style(|theme: &Theme| theme.extended_palette().background.strong.color.into())
 			.into()
 	}
