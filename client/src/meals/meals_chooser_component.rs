@@ -191,7 +191,11 @@ impl MealsChooser {
 
 		let meal_plan = self.meals_database.get();
 		let matcher = SkimMatcherV2::default();
-		for meal_info in meal_plan.all_meals.values() {
+
+		let mut meals = meal_plan.all_meals.values().collect::<Vec<_>>();
+		meals.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+		for meal_info in meals.iter() {
 			if let Some(search) = &self.search {
 				let matched = matcher.fuzzy_match(&meal_info.name.to_lowercase(), &search);
 				if let None = matched {
