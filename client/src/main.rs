@@ -42,7 +42,7 @@ pub fn pt(number: u32) -> f32 {
 fn main() -> Result<()> {
 	env_logger::init();
 
-	iced::application("Test", window::Window::update, window::Window::view)
+	iced::application("bansheelong", window::Window::update, window::Window::view)
 		.font(include_bytes!("../../fonts/NotoSans-Medium.ttf"))
 		.font(include_bytes!("../../fonts/NotoSans-Bold.ttf"))
 		.font(include_bytes!("../../fonts/NotoSans-Regular.ttf"))
