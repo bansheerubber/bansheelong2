@@ -5,8 +5,8 @@ pub async fn dial() -> Result<OneAPIResponse, OneAPIError> {
 	let response_result = client
 		.get("https://api.openweathermap.org/data/3.0/onecall")
 		.query(&[
-			("lat", "33.4484"),
-			("lon", "-112.074"),
+			("lat", "47.664820"),
+			("lon", "-122.345841"),
 			("exclude", "minutely,alerts"),
 			("appid", &std::env::var("BANSHEELONG2_WEATHER_APP_ID").unwrap()),
 			("units", "imperial"),
