@@ -119,11 +119,29 @@ fn edit_ingredients(meal: &mut MealInfo) {
 		);
 	}
 
-	let max = meal.ingredients.len();
-	let ingredient = meal
-		.ingredients
-		.get_mut(read_number_in_range(1, max).unwrap() - 1)
-		.unwrap();
+	println!("#{:<5} Add new ingredient", meal.ingredients.len() + 1);
+
+	let max = meal.ingredients.len() + 1;
+	let selected_index = read_number_in_range(1, max).unwrap() - 1;
+
+	if selected_index == meal.ingredients.len() {
+		let units = read_units().unwrap();
+
+		println!("Enter amount:");
+		let value = read_number().unwrap();
+
+		println!("Enter name:");
+		let name = readline();
+
+		meal.ingredients.push(Ingredient {
+			amount: Amount { units, value },
+			name,
+		});
+
+		return;
+	}
+
+	let ingredient = meal.ingredients.get_mut(selected_index).unwrap();
 
 	let units = read_units().unwrap();
 
@@ -271,7 +289,7 @@ where
 }
 
 fn read_units() -> Option<Units> {
-	println!("Enter ingredients:");
+	println!("Enter units:");
 	println!("1. Count");
 	println!("2. Cups");
 	println!("3. Ounces");
