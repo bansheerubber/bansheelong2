@@ -78,6 +78,16 @@ async fn main() {
 				drop(meal_plan);
 				database.save().await;
 			}
+			"4" => {
+				let meal_plan = database.get();
+				let mut meals = meal_plan.all_meals.values().collect::<Vec<_>>();
+				meals.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+				for meal in meals.iter() {
+					println!("{}", meal.name);
+					println!("  Image: {}", meal.image);
+				}
+			}
 			_ => continue,
 		}
 	}
