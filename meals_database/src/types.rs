@@ -19,6 +19,23 @@ pub enum Units {
 	Ounce = 0,
 	Tablespoon = 3,
 	Teaspoon = 4,
+	Milliliters = 5,
+}
+
+impl TryFrom<&str> for Units {
+	type Error = ();
+
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		match value.to_lowercase().as_str() {
+			"unit" => Ok(Units::Count),
+			"cup" => Ok(Units::Cup),
+			"ounce" => Ok(Units::Ounce),
+			"tablespoon" => Ok(Units::Tablespoon),
+			"clove" | "teaspoon" => Ok(Units::Teaspoon),
+			"milliliters" => Ok(Units::Milliliters),
+			_ => Err(()),
+		}
+	}
 }
 
 impl Display for Units {
@@ -29,6 +46,7 @@ impl Display for Units {
 			Units::Ounce => f.write_str("oz"),
 			Units::Tablespoon => f.write_str("tbsp"),
 			Units::Teaspoon => f.write_str("tsp"),
+			Units::Milliliters => f.write_str("ml"),
 		}
 	}
 }
@@ -45,6 +63,7 @@ impl Units {
 			Units::Ounce => false,
 			Units::Tablespoon => other.is_volume(),
 			Units::Teaspoon => other.is_volume(),
+			Units::Milliliters => other.is_volume(),
 		}
 	}
 
@@ -55,6 +74,7 @@ impl Units {
 			Units::Ounce => return false,
 			Units::Tablespoon => return true,
 			Units::Teaspoon => return true,
+			Units::Milliliters => return true,
 		}
 	}
 
@@ -66,15 +86,19 @@ impl Units {
 		let result = match self {
 			Units::Count => false,
 			Units::Cup => match other {
-				Units::Tablespoon | Units::Teaspoon => true,
+				Units::Tablespoon | Units::Teaspoon | Units::Milliliters => true,
 				_ => false,
 			},
 			Units::Ounce => false,
 			Units::Tablespoon => match other {
-				Units::Teaspoon => true,
+				Units::Teaspoon | Units::Milliliters => true,
 				_ => false,
 			},
-			Units::Teaspoon => false,
+			Units::Teaspoon => match other {
+				Units::Milliliters => true,
+				_ => false,
+			},
+			Units::Milliliters => false,
 		};
 
 		Some(result)
@@ -106,14 +130,20 @@ impl Units {
 			Units::Cup => match right {
 				Units::Tablespoon => 16.0,
 				Units::Teaspoon => 48.0,
+				Units::Milliliters => 236.588,
 				_ => unreachable!(),
 			},
 			Units::Ounce => unreachable!(),
 			Units::Tablespoon => match right {
 				Units::Teaspoon => 3.0,
+				Units::Milliliters => 14.7868,
 				_ => unreachable!(),
 			},
-			Units::Teaspoon => unreachable!(),
+			Units::Teaspoon => match right {
+				Units::Milliliters => 4.92892,
+				_ => unreachable!(),
+			},
+			Units::Milliliters => unreachable!(),
 		};
 
 		if self.is_bigger(other).unwrap() {
