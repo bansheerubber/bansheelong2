@@ -87,12 +87,19 @@ impl Calendar {
 
 		let meal_plan = self.meals_database.get();
 
+		let mut meals_before_month_start = vec![];
 		for planned_meals in meal_plan.planned_meals.values() {
 			for planned_meal in planned_meals.iter() {
 				if planned_meal.date.lt(&self.start) {
-					get_meal_color(&mut meal_id_to_color, &planned_meal.id);
+					meals_before_month_start.push((planned_meal.date, planned_meal.id));
 				}
 			}
+		}
+
+		meals_before_month_start.sort();
+
+		for (_, meal_id) in meals_before_month_start.iter() {
+			get_meal_color(&mut meal_id_to_color, meal_id);
 		}
 
 		let mut days = column(vec![]).spacing(DAY_SPACING);
