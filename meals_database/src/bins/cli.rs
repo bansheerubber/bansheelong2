@@ -150,7 +150,7 @@ async fn main() {
 				let url = readline();
 
 				let recipe_json = Command::new("python")
-					.args(["meals_database/src/bins/scraper.py", &url])
+					.args(["/home/me/Projects/bansheelong2/meals_database/src/bins/scraper.py", &url])
 					.output()
 					.unwrap()
 					.stdout;
