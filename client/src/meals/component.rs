@@ -7,7 +7,7 @@ use iced::{
 	Alignment, Element, Length, Task,
 };
 use meals_database::{MealPlan, MealPlanMessage, MealStub, RestDatabase};
-use std::{borrow::Borrow, sync::Arc};
+use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::{

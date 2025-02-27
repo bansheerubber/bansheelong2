@@ -49,6 +49,7 @@ impl Calendar {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub fn width(&self) -> u16 {
 		7 * DAY_SIZE + 6 * DAY_SPACING
 	}

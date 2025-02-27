@@ -1,15 +1,15 @@
-use std::str::FromStr;
-
 use rocket::{
 	request::{self, FromRequest, Outcome},
 	Request,
 };
+use std::str::FromStr;
 use uuid::Uuid;
 
 use crate::{Context, Error};
 
 #[derive(Debug)]
 pub struct User {
+	#[allow(dead_code)]
 	name: String,
 }
 

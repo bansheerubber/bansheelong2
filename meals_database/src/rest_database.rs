@@ -147,7 +147,7 @@ where
 				header::AUTHORIZATION,
 				format!(
 					"Bearer {}",
-					std::fs::read_to_string("./auth-token").unwrap().trim()
+					std::fs::read_to_string("/home/me/Projects/bansheelong2/auth-token").unwrap().trim()
 				),
 			)
 			.send()
@@ -164,7 +164,7 @@ where
 				header::AUTHORIZATION,
 				format!(
 					"Bearer {}",
-					std::fs::read_to_string("./auth-token").unwrap().trim()
+					std::fs::read_to_string("/home/me/Projects/bansheelong2/auth-token").unwrap().trim()
 				),
 			)
 			.send()

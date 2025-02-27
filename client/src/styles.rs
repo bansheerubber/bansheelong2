@@ -40,6 +40,7 @@ pub fn green_button(theme: &Theme) -> button::Style {
 	}
 }
 
+#[allow(dead_code)]
 pub fn danger_button(theme: &Theme) -> button::Style {
 	button::Style {
 		background: Some(theme.palette().danger.into()),
