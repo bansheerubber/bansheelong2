@@ -1,9 +1,13 @@
 mod database;
 mod rest_database;
+mod scraper;
 mod types;
 
 pub use database::Database;
 pub use rest_database::RestDatabase;
+pub use scraper::normalize_recipe_json;
+pub use scraper::NormalizedRecipe;
+pub use scraper::RecipeJSON;
 pub use types::Amount;
 pub use types::Ingredient;
 pub use types::MealInfo;

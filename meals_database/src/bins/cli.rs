@@ -1,6 +1,8 @@
 use meals_database::{
-	Amount, Ingredient, MealInfo, MealPlan, MealPlanMessage, RecipeStep, RestDatabase, Units,
+	normalize_recipe_json, Amount, Ingredient, MealInfo, MealPlan, MealPlanMessage, RecipeJSON,
+	RecipeStep, RestDatabase, Units,
 };
+use std::process::Command;
 use std::{io::Write, str::FromStr};
 use tokio::sync::mpsc::Receiver;
 use uuid::Uuid;
@@ -30,9 +32,9 @@ async fn main() {
 	}*/
 
 	let (database, _): (RestDatabase<MealPlan>, Receiver<MealPlanMessage>) = RestDatabase::new(
-		"http://bansheestorage:8001/rest/meals/all",
-		"http://bansheestorage:8001/rest/meals/replace",
-		"ws://bansheestorage:8001/ws/meals-events",
+		"http://bansheestorage-alt:8001/rest/meals/all",
+		"http://bansheestorage-alt:8001/rest/meals/replace",
+		"ws://bansheestorage-alt:8001/ws/meals-events",
 	)
 	.await;
 
@@ -43,12 +45,49 @@ async fn main() {
 		println!("2. Delete recipe");
 		println!("3. Edit recipes");
 		println!("4. List recipes");
+		println!("5. Search recipes");
+		println!("6. Add via URL");
+		println!("7. Exit");
 
 		let option = readline();
 		match option.as_str() {
 			"1" => {
 				let recipe = enter_recipe();
 				database.get_mut().all_meals.insert(recipe.id, recipe);
+				database.save().await;
+			}
+			"2" => {
+				let mut meal_plan = database.get_mut();
+				let mut index_to_meal_id = vec![];
+
+				let mut meals = meal_plan
+					.all_meals
+					.values_mut()
+					.collect::<Vec<&mut MealInfo>>();
+
+				meals.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+				for meal in meals.iter_mut() {
+					let index = index_to_meal_id.len();
+
+					println!("#{:<5} {}", index + 1, meal.name);
+					index_to_meal_id.push(meal);
+				}
+
+				let index: usize = read_number().unwrap();
+				let meal = index_to_meal_id.get_mut(index - 1).unwrap();
+
+				println!("Are you sure you want to delete '{}'? Y/n", meal.name);
+
+				let answer = readline();
+				if answer.to_lowercase() == "y" {
+					println!("Removed '{}'", meal.name);
+
+					let meal_id = meal.id.clone();
+					meal_plan.remove_meal(meal_id);
+				}
+
+				drop(meal_plan);
 				database.save().await;
 			}
 			"3" => {
@@ -88,6 +127,76 @@ async fn main() {
 					println!("  Image: {}", meal.image);
 				}
 			}
+			"5" => {
+				let meal_plan = database.get();
+				let mut meals = meal_plan.all_meals.values().collect::<Vec<_>>();
+				meals.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+				println!("Enter query:");
+				let query = readline();
+				let query = query.to_lowercase();
+				let query = query.trim();
+
+				for meal in meals.iter() {
+					if !meal.name.to_lowercase().trim().contains(query) {
+						continue;
+					}
+
+					println!("{}", meal.name);
+					println!("  Image: {}", meal.image);
+				}
+			}
+			"6" => {
+				let url = readline();
+
+				let recipe_json = Command::new("python")
+					.args(["meals_database/src/bins/scraper.py", &url])
+					.output()
+					.unwrap()
+					.stdout;
+
+				let recipe_json: RecipeJSON =
+					serde_json::from_str(&String::from_utf8(recipe_json).unwrap()).unwrap();
+
+				let normalized_recipe = normalize_recipe_json(recipe_json);
+
+				let mut meal_info = MealInfo::default();
+				meal_info.id = Uuid::new_v4();
+				meal_info.ingredients = normalized_recipe.ingredients;
+				meal_info.recipe = normalized_recipe.recipe;
+				meal_info.name = normalized_recipe.name;
+
+				println!("Successfully downloaded '{}'", meal_info.name);
+				println!("New Name:");
+				let new_name = readline();
+				if new_name != "" {
+					meal_info.name = new_name
+				}
+
+				edit_serving_size(&mut meal_info);
+
+				println!("Image link: {}", normalized_recipe.image);
+
+				edit_image(&mut meal_info);
+
+				for (index, ingredient) in meal_info.ingredients.iter().enumerate() {
+					println!(
+						"#{:<5} {} {} {}",
+						index + 1,
+						ingredient.amount.value,
+						ingredient.amount.units,
+						ingredient.name
+					);
+				}
+
+				println!("Saving '{}'...", meal_info.name);
+
+				database.get_mut().all_meals.insert(meal_info.id, meal_info);
+				database.save().await;
+
+				println!("Saved.");
+			}
+			"7" => std::process::exit(0),
 			_ => continue,
 		}
 	}

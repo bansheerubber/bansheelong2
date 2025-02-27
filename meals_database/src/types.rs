@@ -30,8 +30,8 @@ impl TryFrom<&str> for Units {
 			"unit" => Ok(Units::Count),
 			"cup" => Ok(Units::Cup),
 			"ounce" => Ok(Units::Ounce),
-			"tablespoon" => Ok(Units::Tablespoon),
-			"clove" | "teaspoon" => Ok(Units::Teaspoon),
+			"thumb" | "tablespoon" | "tablespoons" => Ok(Units::Tablespoon),
+			"clove" | "teaspoon" | "teaspoons" => Ok(Units::Teaspoon),
 			"milliliters" => Ok(Units::Milliliters),
 			_ => Err(()),
 		}
@@ -266,6 +266,26 @@ pub struct MealPlan {
 }
 
 impl MealPlan {
+	pub fn remove_meal(&mut self, id: Uuid) {
+		self.all_meals.remove(&id);
+
+		for meals in self.planned_meals.values_mut() {
+			if let Some(index) = meals.iter().position(|meal| id == meal.id) {
+				meals.remove(index);
+			}
+		}
+
+		for shopping_list in self.shopping_list.iter_mut() {
+			if let Some(index) = shopping_list
+				.for_meals
+				.iter()
+				.position(|meal| id == meal.id)
+			{
+				shopping_list.for_meals.remove(index);
+			}
+		}
+	}
+
 	pub fn generate_shopping_list(&self) -> Option<ShoppingListInfo> {
 		let mut items: HashMap<String, ShoppingListItem> = HashMap::new();
 
