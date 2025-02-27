@@ -136,6 +136,9 @@ where
 	}
 
 	pub async fn save(&self) {
+		#[allow(deprecated)]
+		let home_directory = std::env::home_dir().unwrap();
+
 		let data = self.get();
 		let client = reqwest::Client::new();
 		client
@@ -147,7 +150,12 @@ where
 				header::AUTHORIZATION,
 				format!(
 					"Bearer {}",
-					std::fs::read_to_string("/home/me/Projects/bansheelong2/auth-token").unwrap().trim()
+					std::fs::read_to_string(format!(
+						"{}/.local/share/bansheelong2/auth-token",
+						home_directory.to_string_lossy()
+					))
+					.unwrap()
+					.trim()
 				),
 			)
 			.send()
@@ -156,6 +164,9 @@ where
 	}
 
 	pub async fn load(&self) {
+		#[allow(deprecated)]
+		let home_directory = std::env::home_dir().unwrap();
+
 		let client = reqwest::Client::new();
 		let response = client
 			.get(&self.get_all_url)
@@ -164,7 +175,12 @@ where
 				header::AUTHORIZATION,
 				format!(
 					"Bearer {}",
-					std::fs::read_to_string("/home/me/Projects/bansheelong2/auth-token").unwrap().trim()
+					std::fs::read_to_string(format!(
+						"{}/.local/share/bansheelong2/auth-token",
+						home_directory.to_string_lossy()
+					))
+					.unwrap()
+					.trim()
 				),
 			)
 			.send()
