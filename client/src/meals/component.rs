@@ -267,26 +267,32 @@ impl Meals {
 					meal_plan.planned_meals.remove(&date);
 				}
 
-				let date = if let MealsMessage::MoveMealBackward { .. } = event {
+				let new_date = if let MealsMessage::MoveMealBackward { .. } = event {
 					date.checked_sub_days(Days::new(1)).unwrap()
 				} else {
 					date.checked_add_days(Days::new(1)).unwrap()
 				};
 
-				meal_stub.date = date;
+				meal_stub.date = new_date;
 				meal_plan
 					.planned_meals
-					.entry(date)
+					.entry(new_date)
 					.or_default()
 					.push(meal_stub);
 
 				drop(meal_plan);
 
 				let meals_database = self.meals_database.clone();
-				Task::future(async move {
-					meals_database.save().await;
-					Message::Noop
-				})
+				Task::batch([
+					Task::future(async move {
+						meals_database.save().await;
+						Message::Noop
+					}),
+					self.meals_list
+						.update(MealsMessage::CloseOpenMeal { date, id }),
+					self.meals_list
+						.update(MealsMessage::ToggleOpenMeal { date: new_date, id }),
+				])
 			}
 			MealsMessage::MoveMealsBackward | MealsMessage::MoveMealsForward => {
 				let mut meal_plan = self.meals_database.get_mut();
