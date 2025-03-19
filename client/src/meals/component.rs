@@ -69,6 +69,14 @@ pub enum MealsMessage {
 		bytes: Bytes,
 		url: String,
 	},
+	MoveMealBackward {
+		date: NaiveDate,
+		id: Uuid,
+	},
+	MoveMealForward {
+		date: NaiveDate,
+		id: Uuid,
+	},
 	MoveMealsBackward,
 	MoveMealsForward,
 	PruneShoppingList {
@@ -242,6 +250,43 @@ impl Meals {
 				self.meals_chooser.update(event.clone());
 				self.random_meal_chooser.update(event);
 				Task::none()
+			}
+			MealsMessage::MoveMealBackward { date, id }
+			| MealsMessage::MoveMealForward { date, id } => {
+				let mut meal_plan = self.meals_database.get_mut();
+				let vec = meal_plan.planned_meals.get_mut(&date).unwrap();
+				let mut meal_stub = vec
+					.iter()
+					.find(|meal_stub| meal_stub.id == id)
+					.unwrap()
+					.clone();
+
+				vec.retain(|meal_stub| meal_stub.id != id);
+
+				if vec.len() == 0 {
+					meal_plan.planned_meals.remove(&date);
+				}
+
+				let date = if let MealsMessage::MoveMealBackward { .. } = event {
+					date.checked_sub_days(Days::new(1)).unwrap()
+				} else {
+					date.checked_add_days(Days::new(1)).unwrap()
+				};
+
+				meal_stub.date = date;
+				meal_plan
+					.planned_meals
+					.entry(date)
+					.or_default()
+					.push(meal_stub);
+
+				drop(meal_plan);
+
+				let meals_database = self.meals_database.clone();
+				Task::future(async move {
+					meals_database.save().await;
+					Message::Noop
+				})
 			}
 			MealsMessage::MoveMealsBackward | MealsMessage::MoveMealsForward => {
 				let mut meal_plan = self.meals_database.get_mut();

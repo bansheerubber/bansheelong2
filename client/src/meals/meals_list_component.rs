@@ -137,6 +137,15 @@ impl MealsList {
 						.on_press(MealsMessage::CompletePlannedMeal { date, id })
 						.style(|theme, _status| invisible_button(theme))
 						.padding(0),
+					container(Space::new(0, 0)).width(15),
+					button(text("\u{e5cb}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::MoveMealBackward { date, id })
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
+					button(text("\u{e5cc}").font(ICONS).size(pt(30)))
+						.on_press(MealsMessage::MoveMealForward { date, id })
+						.style(|theme, _status| invisible_button(theme))
+						.padding(0),
 					container(Space::new(0, 0)).width(Length::Fill),
 					button(text("\u{e5cd}").font(ICONS).size(pt(30)))
 						.on_press(MealsMessage::ToggleOpenMeal { date, id })
