@@ -1,0 +1,13 @@
+select {
+	background-color: #583C63;
+}
+
+textarea {
+	background-color: #583C63;
+}
+
+button[type="submit"] {
+	background-color: #FF66FF;
+	color: #261A2B;
+	padding: 2px 10px;
+}

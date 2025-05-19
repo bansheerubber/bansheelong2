@@ -4,3 +4,4 @@ meals-database.json
 .env.local
 password
 auth-token
+node_modules
