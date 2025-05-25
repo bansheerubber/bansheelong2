@@ -34,7 +34,7 @@ pub async fn get_root(context: &State<Context>, _user: User) -> Result<Markup> {
 
 	let shopping_list_markup = if shopping_lists.len() == 0 {
 		html! {
-			div class="flex flex-col items-center gap-4 pt-6 px-4" {
+			div class="flex flex-col items-center gap-4 px-4" {
 				div class="shopping-list flex gap-2 text-lg w-full sm:w-[500px] p-2 justify-center" {
 					"No shopping lists available"
 				}
@@ -63,6 +63,10 @@ pub async fn get_root(context: &State<Context>, _user: User) -> Result<Markup> {
 
 	Ok(root(html! {
 		div class="flex flex-col items-center gap-4 pt-6 px-4" {
+			a href="/add-recipe" {
+				"Add recipe"
+			}
+
 			(shopping_list_markup)
 
 			@for meal in meals.iter() {
@@ -83,7 +87,7 @@ pub async fn get_add_recipe(_user: User) -> Result<Markup> {
 pub async fn get_parsed_recipe(url: String, _user: User) -> Result<Markup> {
 	let recipe_json = Command::new("python")
 		.args([
-			"/home/me/Projects/bansheelong2/meals_database/src/bins/scraper.py",
+			"/home/me/bansheelong2/meals_database/src/bins/scraper.py",
 			&url,
 		])
 		.output()
