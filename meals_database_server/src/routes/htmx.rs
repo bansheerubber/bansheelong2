@@ -191,7 +191,13 @@ pub async fn post_add_meal(
 	let meals_database = context.meals_database.write().await;
 	let mut meal_plan = meals_database.get_mut();
 
-	let meal_info = data.to_meal_info()?;
+	let maybe_meal_info = data.to_meal_info();
+	let Ok(meal_info) = maybe_meal_info else {
+		drop(meal_plan);
+		drop(meals_database);
+		return Err(maybe_meal_info.err().unwrap());
+	};
+
 	meal_plan.all_meals.insert(meal_info.id, meal_info);
 	drop(meal_plan);
 
