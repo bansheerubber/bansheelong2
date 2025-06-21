@@ -147,6 +147,10 @@ impl AddMealData {
 			.min(self.ingredient_unit.len());
 
 		for i in 0..ingredients_amount {
+			if self.ingredient_name[i].trim().len() == 0 {
+				continue;
+			}
+
 			ingredients.push(Ingredient {
 				amount: Amount {
 					units: Units::try_from(self.ingredient_unit[i].as_str()).unwrap(),
@@ -158,6 +162,10 @@ impl AddMealData {
 
 		let mut recipe = vec![];
 		for step in self.step.iter() {
+			if step.trim().len() == 0 {
+				continue;
+			}
+
 			recipe.push(RecipeStep {
 				description: step.clone(),
 			});
